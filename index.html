@@ -101,7 +101,7 @@ code{font-size:.84em;background:var(--paper-2);padding:.08em .35em;border-radius
 .topbar-in{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-block:8px}
 .topbar-in::-webkit-scrollbar{display:none}
 /* phones: every zone stays in sight on two rows; a sideways scroll was not discoverable */
-@media (max-width:640px){.topbar-in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;gap:6px}.topbar .zbtn{min-height:44px;padding:5px 8px;font-size:.9rem;line-height:1.15;gap:6px;white-space:normal;text-align:left;border-radius:12px}}
+@media (max-width:640px){.topbar-in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;gap:6px}.topbar .zbtn{min-height:54px;padding:6px 8px;font-size:1.02rem;line-height:1.15;white-space:normal;text-align:center;justify-content:center;border-radius:12px;box-shadow:inset 0 -4px 0 var(--z)}.topbar .zbtn .zdot{display:none}}
 .zbtn{appearance:none;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:8px 14px;border:1px solid var(--rule);border-radius:999px;background:var(--sheet);color:var(--ink);font:600 .95rem var(--font-ui);white-space:nowrap;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
 .zbtn .zdot{width:10px;height:10px;border-radius:50%;background:var(--z)}
 .zbtn:hover{border-color:var(--z)}
