@@ -1080,6 +1080,26 @@ span.kico.k-taxi{--k:var(--k-taxi);color:var(--k-taxi-ink)}
 .dish-ru{font-size:.92rem;font-weight:600}
 .dish-ru i{font-style:normal;font-weight:400;color:var(--ink-2)}
 .dish small{grid-column:2;font-size:.84rem;color:var(--amber-ink,var(--ink-2))}
+.dish.info{display:flex;align-items:center;gap:11px;padding:6px 8px 6px 6px}
+.dish-ph{flex:none;width:72px;height:54px;border-radius:3px;object-fit:cover;background:var(--paper-2)}
+.dish-ph.none{display:grid;place-items:center;color:var(--ink-3)}
+.dish-ph.none svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dish-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.dish-go{flex:none;display:grid;place-items:center;width:22px;color:var(--z-strong)}
+.dish-go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.dsh{flex:1;display:grid;gap:18px 40px;width:100%;max-width:1040px;margin:0 auto;align-content:start}
+.dsh-main{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.dsh-ph{margin:0;width:100%;max-width:560px}
+.dsh-ph img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:#EEE}
+.dsh-ph figcaption{margin-top:5px;font-size:.78rem;color:#555;text-align:left}
+.dsh-ph a{color:inherit}
+.sh-dish .sh-cn{font-size:clamp(2.2rem,10vw,4.2rem)}
+.dsh-info{max-width:62ch;color:#222;font-size:1.08rem;line-height:1.55}
+.dsh-info h2{margin:0 0 4px;font:800 1.45rem/1.25 var(--font-ui);color:#111}
+.dsh-info h2::first-letter{text-transform:uppercase}
+.dsh-info h3{margin:16px 0 3px;font:700 .82rem/1.3 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#4A5A52}
+.dsh-info p{margin:0}
+@media (min-width:900px){.dsh{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-content:center}.dsh-info{padding-top:8px}}
 .ecard.compact{--z:var(--leisure);--z-strong:var(--leisure-strong)}
 .dishes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:10px 14px}
 .dish-row{display:flex;flex-direction:column;gap:5px}
@@ -1197,11 +1217,12 @@ const I = {
   phone:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/></svg>',
   sound:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
   car:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16v-4l2-5h12l2 5v4z"/><path d="M4 12h16"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></svg>',
-  pin:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
+  pin:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+  bowl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20.5h8"/><path d="M14.5 3.5l6 6M12 4l3.5 7.5"/></svg>'
 };
 const ST = {
   done:{t:'Готово',c:'done'}, bought:{t:'Куплено',c:'done'}, verified:{t:'Сверено',c:'done'},
-  buy:{t:'Купить',c:'buy'}, check:{t:'Проверить',c:'check'}, plan:{t:'План',c:'plan'},
+  buy:{t:'Купить',c:'buy'}, check:{t:'Проверить',c:'check'}, plan:{t:'План',c:'plan'}, idea:{t:'Идея',c:'plan'},
   incomplete:{t:'Недокачан',c:'check'}, missing:{t:'Ожидается',c:'buy'}
 };
 
@@ -1671,22 +1692,21 @@ function weatherSection() {
 const segWx = s => ({date: 'seg-' + s.from, tmax: s.tmax, snowP: s.snowP, rainP: Math.max(Math.round(100 * s.rainDays / s.ds.length) || 0, /зонт/i.test(s.wear || '') ? 35 : 0)});
 const rain = s => s.ds.length === 1 ? 'шанс дождя ' + s.ds[0].rainP + '%' : 'дождливых дней ≈ ' + Math.round(s.rainDays) + ' из ' + s.ds.length;
   const sw = (cls, d) => '<svg viewBox="0 0 26 12" aria-hidden="true"><path class="' + cls + '" d="' + d + '"/></svg>';
-  return '<div class="block"><h2>Погода по пути</h2><p class="lead">Норма на каждый день маршрута — средние за 10 лет наблюдений (' + esc(W.years) + ') на эти же даты в том городе, где родители будут в этот день. Ближайшие дни — с прогнозом из нескольких источников, см. ниже.</p>' +
+  return '<div class="block"><h2>Погода по пути</h2><p class="lead">Норма на каждый день маршрута — средние за 10 лет наблюдений (' + esc(W.years) + ') на эти же даты в том городе, где родители будут в этот день. Ближайшие дни — с прогнозом из нескольких источников (список под графиком).</p>' +
       '<ul class="wx-insights">' + W.insights.map(x => '<li>' + I.temp + '<span>' + esc(x) + '</span></li>').join('') + '</ul></div>' +
     '<div class="block"><h2>Температура и дожди по дням</h2><div class="wx" id="wx" tabindex="0" role="group" aria-label="График температуры по дням маршрута. Наведите или нажмите на день; стрелки влево и вправо выбирают день."><div class="wx-tip" id="wxtip" hidden></div></div>' +
       '<div class="wx-legend"><span>' + sw('wx-inner', 'M0 2h26v8H0z') + 'обычно: днём и ночью</span><span>' + sw('wx-outer', 'M0 0h26v12H0z') + 'бывает: 1 год из 10</span><span><svg viewBox="0 0 26 12" aria-hidden="true"><path class="wx-fc" d="M0 6h26"/><circle class="wx-fcd" cx="13" cy="6" r="4"/></svg>прогноз: середина всех источников</span><span><svg viewBox="0 0 26 12" aria-hidden="true"><path class="wx-spread" d="M13 1V11M9 1h8M9 11h8"/></svg>разброс источников днём</span><span>' + sw('wx-rain', 'M3 2h8v10H3zM15 6h8v6h-8z') + 'дождь, % дней</span></div>' +
       '<details class="donebox" data-key="wx-table"' + (openDetails.has('wx-table') ? ' open' : '') + '><summary>' + I.file + 'Таблица по дням</summary><div class="table-wrap"><table><thead><tr><th scope="col">Дата</th><th scope="col">Где</th><th scope="col" class="num">Днём</th><th scope="col" class="num">Ночью</th><th scope="col" class="num">Бывает</th><th scope="col" class="num">Дождь</th><th scope="col">Прогноз</th></tr></thead><tbody>' +
-      W.days.map(d => '<tr><td class="mono">' + ddmm(d.date) + ' ' + weekday(d.date) + '</td><td>' + esc(d.place) + '</td><td class="num">' + deg(d.tmax) + '</td><td class="num">' + deg(d.tmin) + '</td><td class="num">' + deg(d.cold) + '…' + deg(d.warm) + '</td><td class="num">' + d.rainP + '%</td><td>' + (d.fc ? deg(d.fc.tmin) + '…' + deg(d.fc.tmax) : '—') + '</td></tr>').join('') + '</tbody></table></div></details></div>' +
-    wxSources() +
-    '<div class="block"><h2>Что надеть</h2><div class="wx-cards">' + segs.map(s => '<article class="wxc"><div class="wxc-top"><span class="wxc-place">' + esc(s.title) + '</span><span class="due-s">' + esc(s.dates) + '</span></div><div class="wxc-temps"><span><b>' + deg(s.tmax) + '</b>днём</span><span><b>' + deg(s.tmin) + '</b>ночью</span></div><p class="wxc-range">Бывает от ' + deg(s.cold) + ' до ' + deg(s.warm) + ' · ' + (s.snowP >= 10 ? 'снег в ' + s.snowP + '% дней · ' : '') + rain(s) + '</p><p class="wxc-wear"><span class="lab">Что надеть</span><span>' + wearH(s.wear) + '</span></p><div class="wxc-foot">' + (s.tip ? '<p class="wxc-tip">' + esc(s.tip) + '</p>' : '<span></span>') + '<div class="wxc-pz">' + pzBtn(pzOutdoor(segWx(s))) + '</div></div></article>').join('') + '</div><p class="lead">Источник: ' + esc(W.source) + '. «Бывает» — самая холодная ночь и самый тёплый день, которые случаются примерно раз в 10 лет.</p></div>';
+      W.days.map(d => '<tr><td class="mono">' + ddmm(d.date) + ' ' + weekday(d.date) + '</td><td>' + esc(d.place) + '</td><td class="num">' + deg(d.tmax) + '</td><td class="num">' + deg(d.tmin) + '</td><td class="num">' + deg(d.cold) + '…' + deg(d.warm) + '</td><td class="num">' + d.rainP + '%</td><td>' + (d.fc ? deg(d.fc.tmin) + '…' + deg(d.fc.tmax) : '—') + '</td></tr>').join('') + '</tbody></table></div></details>' + wxSources() + '</div>' +
+    '<div class="block"><h2>Что надеть</h2><div class="wx-cards">' + segs.map(s => '<article class="wxc"><div class="wxc-top"><span class="wxc-place">' + esc(s.title) + '</span><span class="due-s">' + esc(s.dates) + '</span></div><div class="wxc-temps"><span><b>' + deg(s.tmax) + '</b>днём</span><span><b>' + deg(s.tmin) + '</b>ночью</span></div><p class="wxc-range">Бывает от ' + deg(s.cold) + ' до ' + deg(s.warm) + ' · ' + (s.snowP >= 10 ? 'снег в ' + s.snowP + '% дней · ' : '') + rain(s) + '</p><p class="wxc-wear"><span class="lab">Что надеть</span><span>' + wearH(s.wear) + '</span></p><div class="wxc-foot">' + (s.tip ? '<p class="wxc-tip">' + esc(s.tip) + '</p>' : '<span></span>') + '<div class="wxc-pz">' + pzBtn(pzOutdoor(segWx(s))) + '</div></div></article>').join('') + '</div><p class="lead">«Бывает» — самая холодная ночь и самый тёплый день, которые случаются примерно раз в 10 лет.</p></div>';
 }
 function wxSources() {
   const W = state.weather, M = W.models || {}, D = W.days.filter(d => d.fc);
   const cnt = k => D.filter(d => k === 'local' ? d.fc.local : d.fc.models && d.fc.models[k]).length;
   const hz = {ecmwf: '15 дней', gfs: '16 дней', jma: '11 дней', icon: '7–8 дней', cma: '5 дней', local: '15 дней, только Китай'};
   const upd = W.updated.length > 10 ? ddmm(W.updated.slice(0, 10)) + ' в ' + W.updated.slice(11, 16) : ddmm(W.updated);
-  return '<div class="block"><h2>Источники прогноза</h2><p class="lead">Обновлено ' + upd + '. Чем ближе дата, тем больше источников подключается — у каждого своя дальность. Когда источники расходятся больше чем на 5°, надёжнее норма за 10 лет.</p><div class="wx-src">' +
-    Object.keys(M).map(k => '<div><b>' + esc(M[k]) + '</b><span>видит вперёд: ' + hz[k] + '</span><span class="' + (cnt(k) ? 'on' : '') + '">' + (cnt(k) ? 'уже даёт прогноз на ' + cnt(k) + ' ' + plural(cnt(k), 'день', 'дня', 'дней') + ' поездки' : 'дни поездки пока дальше её горизонта') + '</span></div>').join('') + '</div></div>';
+  return '<details class="donebox" data-key="wx-src"' + (openDetails.has('wx-src') ? ' open' : '') + '><summary>' + I.file + 'Источники прогноза · обновлено ' + upd + '</summary><p class="lead">' + esc(W.source) + '</p><p class="lead">Чем ближе дата, тем больше источников подключается — у каждого своя дальность. Когда источники расходятся больше чем на 5°, надёжнее норма за 10 лет.</p><div class="wx-src">' +
+    Object.keys(M).map(k => '<div><b>' + esc(M[k]) + '</b><span>видит вперёд: ' + hz[k] + '</span><span class="' + (cnt(k) ? 'on' : '') + '">' + (cnt(k) ? 'уже даёт прогноз на ' + cnt(k) + ' ' + plural(cnt(k), 'день', 'дня', 'дней') + ' поездки' : 'дни поездки пока дальше её горизонта') + '</span></div>').join('') + '</div></details>';
 }
 function drawWeather() {
   const box = document.getElementById('wx'); if (!box || !state.weather) return;
@@ -1768,18 +1788,37 @@ function walk(load) {
 /* food: where to eat near the stays and what to order without spice or fat (state.leisure.eat) */
 let eatCity = null;
 const eatDefault = () => ((view === 'day' && daySel) || isoOf(todayUTC())) >= '2026-10-26' ? 'Чэнду' : 'Сиань';
-const dishBtn = d => '<button type="button" class="dish" data-show="' + showKey({kind: 'phrase', title: d.ru, cn: d.cn, say: d.say, ru: d.ru + (d.note ? '. ' + d.note : '')}) + '"><span class="cjk" lang="zh">' + esc(d.cn) + '</span><span class="dish-ru">' + esc(d.ru) + (d.say ? ' <i>«' + esc(d.say) + '»</i>' : '') + '</span>' + (d.note ? '<small>' + esc(d.note) + '</small>' : '') + '</button>';
+/* a dish with a reference card (eat.dishinfo) opens photo + what it is + how to eat; its photo rides in FILES as 'dish-<id>' (tools/build.py) */
+const dishPh = {};
+const dishSrc = id => { const k = 'dish-' + id, f = FILES[k]; return f ? dishPh[k] || (dishPh[k] = URL.createObjectURL(fileBlob(f))) : ''; };
+function dishBtn(d) {
+  const x = d.dish && (state.leisure.eat.dishinfo || {})[d.dish], src = x ? dishSrc(d.dish) : '';
+  const text = '<span class="cjk" lang="zh">' + esc(d.cn) + '</span><span class="dish-ru">' + esc(d.ru) + (d.say ? ' <i>«' + esc(d.say) + '»</i>' : '') + '</span>' + (d.note ? '<small>' + esc(d.note) + '</small>' : '');
+  if (!x) return '<button type="button" class="dish" data-show="' + showKey({kind: 'phrase', title: d.ru, cn: d.cn, say: d.say, ru: d.ru + (d.note ? '. ' + d.note : '')}) + '">' + text + '</button>';
+  const it = {kind: 'dish', title: d.ru, cn: d.cn, say: d.say, ru: d.ru, info: x, src, tip: d.note || d.why, tipLab: d.note ? 'Совет' : 'Почему подходит'};
+  return '<button type="button" class="dish info" data-show="' + showKey(it) + '">' + (src ? '<img class="dish-ph" src="' + src + '" alt="" loading="lazy">' : '<span class="dish-ph none" aria-hidden="true">' + I.bowl + '</span>') +
+    '<span class="dish-t">' + text + '</span><span class="dish-go" aria-hidden="true">' + I.next + '</span></button>';
+}
+function dishView(it) {
+  const x = it.info, c = x.credit;
+  const ph = it.src ? '<figure class="dsh-ph"><img src="' + it.src + '" alt="' + esc(it.ru) + '">' + (c ? '<figcaption>Фото: ' + (c.url ? '<a href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(c.author) + '</a>' : esc(c.author)) + ' · ' + esc(c.license) + '</figcaption>' : '') + '</figure>' : '';
+  const sec = (h, t) => t ? '<h3>' + h + '</h3><p>' + esc(t) + '</p>' : '';
+  return '<div class="show sh-dish" role="dialog" aria-modal="true" aria-label="' + esc(it.ru) + '"><button type="button" class="sh-x" data-ovclose="1">' + I.prev + '<span>Назад</span></button><div class="dsh">' +
+    '<div class="dsh-main">' + ph + '<p class="sh-pre-ru">Покажите официанту</p><p class="sh-cn" lang="zh">' + esc(it.cn) + '</p>' + (it.say ? '<p class="sh-say">«' + esc(it.say) + '»</p>' : '') +
+    (speakBtn(it) ? '<div class="sh-acts">' + speakBtn(it) + '</div>' : '') + '</div>' +
+    '<div class="dsh-info"><h2>' + esc(it.ru) + '</h2>' + sec('Что это', x.what) + sec('Как есть', x.how) + sec(esc(it.tipLab), it.tip) + '</div></div></div>';
+}
 function eatCard(p, compact) {
   const taxi = p.addr_cn ? '<button type="button" class="mini" data-show="' + showKey({title: p.name, cn: p.cn + '\n' + p.addr_cn, say: p.say}) + '">' + I.car + ' Показать водителю</button>' : '';
   const order = p.order || [], top = order.slice(0, 2), key = 'eat-' + p.id;
   // on the food page the dishes, price, hours and the caveat fold away so a phone page stays short; the day view shows two dishes
   const warn = p.warn ? '<p class="pc-warn">' + I.alert + '<span>' + esc(p.warn) + '</span></p>' : '';
-  const more = compact ? '' : (order.length ? '<div class="e-order"><span class="lab">Нажмите блюдо, чтобы показать официанту</span>' + order.map(dishBtn).join('') + '</div>' : '') + (p.price ? '<p class="pc-how"><b>Сколько.</b> ' + esc(p.price) + '</p>' : '') + (p.hours ? '<p class="pc-how"><b>Часы.</b> ' + esc(p.hours) + '</p>' : '') + warn;
+  const more = compact ? '' : (order.length ? '<div class="e-order"><span class="lab">Нажмите блюдо: фото, что это и как есть, название крупно для официанта</span>' + order.map(dishBtn).join('') + '</div>' : '') + (p.price ? '<p class="pc-how"><b>Сколько.</b> ' + esc(p.price) + '</p>' : '') + (p.hours ? '<p class="pc-how"><b>Часы.</b> ' + esc(p.hours) + '</p>' : '') + warn;
   return '<article class="ecard' + (compact ? ' compact' : '') + '"><span class="stamp-corner">' + esc(p.meal) + '</span>' +
     '<span class="pc-name">' + esc(p.name) + '</span><span class="say-s"><span class="cjk" lang="zh">' + esc(p.cn) + '</span>' + (p.say ? ' — «' + esc(p.say) + '»' : '') + '</span>' +
     '<span class="e-near">' + I.pin + '<span>' + esc(p.near) + '</span></span>' +
     '<p>' + esc(p.what) + '</p>' +
-    (compact && top.length ? '<div class="e-order"><span class="lab">Что заказать — нажмите, чтобы показать официанту</span>' + top.map(dishBtn).join('') + '</div>' : '') +
+    (compact && top.length ? '<div class="e-order"><span class="lab">Что заказать — нажмите: фото и как есть</span>' + top.map(dishBtn).join('') + '</div>' : '') +
     (compact ? warn : fold(key, order.length ? 'Что заказать' + (p.warn ? ' и советы' : '') + ' <small>' + order.length + ' ' + plural(order.length, 'блюдо', 'блюда', 'блюд') + '</small>' : 'Цены, часы и советы', more)) +
     '<div class="pc-foot">' + (compact ? '' : taxi) + (p.confidence === 'verified' ? '' : tag('check', 'уточнить на месте')) + '</div></article>';
 }
@@ -1831,6 +1870,7 @@ function leisure() {
     xian: () => (state.crowd ? '<div class="block"><h2>Толпы в Сиане</h2>' + crowdScale('2026-10-23', '2026-10-26') + '</div>' : '') + city(L.cities[0]),
     chengdu: () => (state.crowd ? '<div class="block"><h2>Толпы в Чэнду</h2>' + crowdScale('2026-10-26', state.crowd.to) + '</div>' : '') + city(L.cities[1]),
     trips: () => '<div class="block"><p class="lead">' + esc(L.trips.lead) + '</p></div>' + city(L.trips),
+    far: () => '<div class="block"><p class="lead">' + esc(L.far.lead) + '</p></div>' + city(L.far),
     phrases: () => '<div class="block"><h2>Фразы для касс, ресторана и вокзала</h2><p class="lead">' + esc(L.phrases.lead) + '</p><div class="phrases">' + L.phrases.items.map(phraseCard).join('') + '</div></div>',
     todo: () => taskBlock('leisure') + importantBlock('leisure')
   });
@@ -2465,7 +2505,7 @@ const VIEWS = {home, day: dayView, health, travel, leisure, docs, map};
 const SECTIONS = {
   health: [['summary', 'Сводка для врача'], ['prep', 'Чего не хватает'], ['meds', 'Лекарства'], ['clinics', 'Где лечиться'], ['cards', 'Карточки на китайском'], ['log', 'Журнал и документы']],
   travel: [['main', 'Билеты'], ['weather', 'Погода и одежда'], ['stays', 'Жильё'], ['days', 'По дням'], ['choices', 'Решения'], ['rules', 'Безвиз и правила']],
-  leisure: [['plan', 'День рождения'], ['crowd', 'Когда толпы'], ['xian', 'Сиань'], ['chengdu', 'Чэнду'], ['food', 'Еда'], ['trips', 'За город'], ['phrases', 'Фразы'], ['todo', 'Что сделать']],
+  leisure: [['plan', 'День рождения'], ['crowd', 'Когда толпы'], ['xian', 'Сиань'], ['chengdu', 'Чэнду'], ['food', 'Еда'], ['trips', 'За город'], ['far', 'Природа и чудеса'], ['phrases', 'Фразы'], ['todo', 'Что сделать']],
   docs: [['passports', 'Паспорта'], ['wait', 'Ожидаются'], ['files', 'Все файлы'], ['check', 'Сверка']]
 };
 const STAY_FORKS = ['f7', 'f4'];
@@ -2503,21 +2543,27 @@ function fabs() {
 let wake = null;
 function syncShow() {
   const want = !!(ov && ov.k === 'show') && document.visibilityState === 'visible';
-  if (!(ov && ov.k === 'show') && window.speechSynthesis && speechSynthesis.speaking) speechSynthesis.cancel();
+  if (!(ov && ov.k === 'show')) stopVoice();
   if (want && !wake && navigator.wakeLock) {
     wake = navigator.wakeLock.request('screen').then(l => { if (!(ov && ov.k === 'show')) { l.release(); wake = null; return; } wake = l; l.addEventListener('release', () => { if (wake === l) wake = null; }); }, () => { wake = null; });
   } else if (!want && wake && wake.release) { wake.release().catch(() => {}); wake = null; }
 }
 document.addEventListener('visibilitychange', syncShow);  // the system drops the lock when the app is hidden; take it again on return
+/* «Озвучить» plays a clip recorded in advance (tools/make_voice.py): the phone's own Chinese voice is often missing or unintelligible.
+   The key mirrors tools/voice_texts.py: 'a:' an address for a driver, 'p:' a phrase or a dish, then the text with breaks as '，'. */
+const voiceKey = it => (it.kind ? 'p:' : 'a:') + it.cn.trim().replace(/\s*·\s*|\n+/g, '，');
+const speakBtn = it => it.cn && FILES['voice:' + voiceKey(it)] ? '<button type="button" class="sh-copy" data-speak="1">' + I.sound + '<span>Озвучить по-китайски</span></button>' : '';
+let voice = null;
+function stopVoice() { if (voice) { const a = voice; voice = null; a.pause(); a.onended(); } }
 function speakZh(btn) {
-  const S = window.speechSynthesis, it = ov && ov.it; if (!S || !it || !it.cn) return;
-  const V = S.getVoices(), v = V.find(x => /^(zh|cmn)[-_](CN|Hans)/i.test(x.lang)) || V.find(x => /^(zh|cmn)/i.test(x.lang));
-  if (V.length && !v) { flash(btn, 'На телефоне нет китайского голоса'); return; }
-  S.cancel();
-  const u = new SpeechSynthesisUtterance(it.cn.replace(/\n+/g, '，')); u.lang = 'zh-CN'; u.rate = .8; if (v) u.voice = v;
-  u.onstart = () => btn.classList.add('on'); u.onend = () => btn.classList.remove('on');
-  u.onerror = e => { btn.classList.remove('on'); if (e.error !== 'canceled' && e.error !== 'interrupted') flash(btn, 'Не получилось озвучить'); };
-  S.speak(u);
+  const f = ov && ov.it && ov.it.cn && FILES['voice:' + voiceKey(ov.it)]; if (!f) return;
+  stopVoice();  // a second tap starts the clip again from the beginning
+  const url = URL.createObjectURL(fileBlob(f)), a = new Audio(url);
+  const fail = () => { a.onended(); flash(btn, 'Не получилось включить звук'); };
+  a.onended = () => { btn.classList.remove('on'); URL.revokeObjectURL(url); if (voice === a) voice = null; };
+  a.onerror = fail;
+  voice = a; btn.classList.add('on');
+  a.play().catch(e => { if (voice === a && e.name !== 'AbortError') fail(); });
 }
 const hashOf = () => view === 'day' ? 'day-' + (daySel || defaultDay()) : SECTIONS[view] ? view + '-' + sub[view] : view;
 function parseView(h) {
@@ -2613,6 +2659,7 @@ function drvBlock() {
     '</div></div>';
 }
 function showView(it) {
+  if (it.kind === 'dish') return dishView(it);
   const zh = !!it.cn, phrase = it.kind === 'phrase';
   const pre = phrase ? '<p class="sh-pre-ru">Покажите этот экран</p>'
     : zh ? '<p class="sh-pre" lang="zh">请带我去：</p><p class="sh-pre-ru">«Цин дай во цюй» — отвезите меня сюда</p>' : '<p class="sh-pre-ru">Отвезите, пожалуйста, по адресу:</p>';
@@ -2620,7 +2667,7 @@ function showView(it) {
     (zh ? '<p class="sh-cn" lang="zh">' + esc(it.cn) + '</p>' + (it.say ? '<p class="sh-say">«' + esc(it.say) + '»</p>' : '') : '<p class="sh-ru">' + esc(it.ru) + '</p>') +
     (it.son ? '<div class="sh-nums">' + (state.help.son.phones || []).map(x => '<a href="tel:' + esc(x.n) + '">' + esc(x.show) + '</a>').join('') + '</div>' : '') +
     '<p class="sh-title">' + esc(phrase ? it.ru : it.title) + (it.note ? ' · ' + esc(it.note) : '') + '</p>' +
-    '<div class="sh-acts">' + (zh && 'speechSynthesis' in window ? '<button type="button" class="sh-copy" data-speak="1">' + I.sound + '<span>Озвучить по-китайски</span></button>' : '') + (phrase || it.son || !(it.cn || it.ru) ? '' : addrBtn(it, 'sh-copy')) + '</div></div></div>';
+    '<div class="sh-acts">' + speakBtn(it) + (phrase || it.son || !(it.cn || it.ru) ? '' : addrBtn(it, 'sh-copy')) + '</div></div></div>';
 }
 function sosView() {
   const H = state.help, P = H.son.phones || [];
