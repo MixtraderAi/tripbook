@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 
-const CONFIG = /*CONFIG*/{"DATA_ENDPOINTS": ["./data.json"], "FETCH_TIMEOUT_MS": 3500, "WEATHER_TIMEOUT_MS": 15000, "LINK_SECRET": null, "BUILD": "04b3c7edb7"}/*END*/;
+const CONFIG = /*CONFIG*/{"DATA_ENDPOINTS": ["./data.json", "https://mixtraderai.github.io/tripbook/data.json"], "FETCH_TIMEOUT_MS": 3500, "WEATHER_TIMEOUT_MS": 15000, "LINK_SECRET": null, "BUILD": "fe93f419d5"}/*END*/;
 const WX = /*WX*/{"cities": {"tyumen": [57.15, 65.53], "petro": [54.87, 69.15], "karaganda": [49.8, 73.1], "almaty": [43.24, 76.89], "xian": [34.34, 108.94], "chengdu": [30.66, 104.06]}, "models": {"ecmwf": "ecmwf_ifs025", "gfs": "gfs_seamless", "icon": "icon_seamless", "cma": "cma_grapes_global", "jma": "jma_seamless"}}/*END*/;
 
 const readJSON = id => { const el = document.getElementById(id); if (!el) return null; try { return JSON.parse(el.textContent); } catch (e) { return null; } };
