@@ -1,0 +1,34 @@
+/* PWA shell around the dashboard: lock screen, update line, footer. Uses the dashboard's tokens. */
+html.pwa-locked{overflow:hidden}
+.pwa-lock{position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:auto;
+  padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));background:var(--paper)}
+.pwa-lock-card{width:min(420px,100%);display:flex;flex-direction:column;gap:14px;padding:28px 22px;
+  background:var(--sheet);border:1px solid var(--rule);border-radius:16px}
+.pwa-lock-kicker{margin:0;font:600 .95rem/1.3 var(--font-ui);color:var(--ink-3);letter-spacing:.02em}
+.pwa-lock-title{margin:0;font:700 1.75rem/1.2 var(--font-title);color:var(--ink)}
+.pwa-lock-sub{margin:0;font:400 1.05rem/1.5 var(--font-ui);color:var(--ink-2)}
+.pwa-link{display:flex;flex-direction:column;gap:6px;font:600 1rem var(--font-ui);color:var(--ink-2)}
+.pwa-link[hidden]{display:none}
+.pwa-link input,.pwa-pin{width:100%;border:2px solid var(--rule);border-radius:12px;background:var(--paper);color:var(--ink)}
+.pwa-link input{min-height:56px;padding:0 14px;font:400 1rem var(--font-ui)}
+.pwa-pin{height:72px;padding:0 12px;text-align:center;font:600 2.2rem/1 var(--font-data);letter-spacing:.35em}
+.pwa-link input:focus,.pwa-pin:focus{outline:3px solid var(--pen);outline-offset:2px;border-color:var(--pen)}
+.pwa-lock-err{margin:0;min-height:1.5em;font:600 1rem/1.45 var(--font-ui);color:var(--seal)}
+.pwa-btn{min-height:62px;border:0;border-radius:12px;background:var(--jade);color:var(--on-jade);font:700 1.25rem var(--font-ui);cursor:pointer}
+.pwa-btn:focus-visible{outline:3px solid var(--pen);outline-offset:3px}
+.pwa-btn:disabled{opacity:.7;cursor:progress}
+
+.pwa-bar{max-width:1180px;margin-inline:auto;padding:8px 16px;padding-top:max(8px,env(safe-area-inset-top));
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;font:500 .95rem/1.35 var(--font-ui);color:var(--ink-2)}
+.pwa-bar[hidden]{display:none}
+.pwa-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--ink-3)}
+.pwa-bar.is-ok .pwa-dot{background:var(--jade)}
+.pwa-bar.is-off .pwa-dot,.pwa-bar.is-new .pwa-dot{background:var(--amber)}
+.pwa-bar.is-new{color:var(--ink)}
+.pwa-mini{min-height:44px;padding:0 14px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet);color:var(--ink);
+  font:600 .95rem var(--font-ui);cursor:pointer}
+.pwa-mini:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+
+.pwa-foot{max-width:1180px;margin:-72px auto 0;padding:0 16px max(24px,env(safe-area-inset-bottom));
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;color:var(--ink-3);font:400 .85rem var(--font-ui)}
+.pwa-foot[hidden]{display:none}

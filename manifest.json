@@ -1,0 +1,19 @@
+{
+  "id": "china-trip-2026",
+  "name": "Поездка родителей в Китай",
+  "short_name": "Китай 2026",
+  "description": "Билеты, паспорта, расписание и погода — без интернета",
+  "lang": "ru",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F5F3",
+  "theme_color": "#F2F5F3",
+  "icons": [
+    {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
