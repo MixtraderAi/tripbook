@@ -909,6 +909,12 @@ span.kico.k-taxi{--k:var(--k-taxi);color:var(--k-taxi-ink)}
 .show{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;gap:10px;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));background:#fff;color:#111;overflow:auto}
 .sh-x{align-self:flex-end;display:inline-flex;align-items:center;gap:8px;min-height:50px;padding:0 18px;border:2px solid #111;border-radius:999px;background:#fff;color:#111;font:700 1.02rem var(--font-ui);cursor:pointer}
 .sh-x svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.sh-copy{display:inline-flex;align-items:center;gap:8px;min-height:50px;margin-top:8px;padding:0 20px;border:2px solid #111;border-radius:999px;background:#fff;color:#111;font:700 1.02rem var(--font-ui);cursor:pointer}
+.sh-copy svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.stay-addr{align-self:flex-start}
+.backbar{appearance:none;display:inline-flex;align-items:center;gap:8px;min-height:48px;margin-top:12px;padding:0 18px 0 12px;border:1.5px solid var(--z,var(--rule));border-radius:999px;background:var(--sheet);color:var(--z-strong,var(--ink));font:600 1rem/1.25 var(--font-ui);text-align:left;cursor:pointer}
+.backbar svg{width:20px;height:20px;stroke-width:2.2}
+.backbar:hover{background:var(--z-wash,var(--paper-2))}
 .sh-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;text-align:center}
 .sh-pre{margin:0;font:500 clamp(1.5rem,6vw,2.4rem)/1.3 var(--font-cjk);color:#333}
 .sh-pre-ru{margin:0;font-size:1.02rem;color:#555}
@@ -1227,7 +1233,8 @@ function checkMRZ(p) {
 /* ---------- shared pieces ---------- */
 function topbar() {
   return '<nav class="topbar" aria-label="Разделы"><div class="topbar-in">' + ZONE_IDS.map(z =>
-    '<button type="button" class="zbtn zone-' + z + (z === view ? ' on' : '') + '" data-go="' + z + '"' + (z === view ? ' aria-current="page"' : '') + '><span class="zdot" aria-hidden="true"></span>' + esc(ZONES[z].short) + '</button>').join('') + '</div></nav>';
+    '<button type="button" class="zbtn zone-' + z + (z === view ? ' on' : '') + '" data-go="' + z + '"' + (z === view ? ' aria-current="page"' : '') + '><span class="zdot" aria-hidden="true"></span>' + esc(ZONES[z].short) + '</button>').join('') + '</div></nav>' +
+    (history.state && history.state.back ? '<button type="button" class="backbar" data-back="1">' + I.prev + '<span>Назад: ' + esc(history.state.back) + '</span></button>' : '');
 }
 function zhead(z, extra) {
   const next = openTasks(z)[0];
@@ -1487,13 +1494,10 @@ function sheetView() {
     '<p class="ts-hint">' + (ins ? 'Сначала звонок в ассистанс: ' + t.show + '. В больнице покажите паспорт и этот полис.' : stay ? 'При заселении покажите паспорта и эту бронь.' : 'На посадке билет не спрашивают — достаточно паспорта. Файл — на случай вопросов проводника.') + '</p></div>';
 }
 function openSheet(id) {
-  const y = window.scrollY; sheet = id; render(); window.scrollTo(0, y);
+  const y = window.scrollY; pushLayer(); ov = null; sheet = id; render(); window.scrollTo(0, y);
   const x = document.querySelector('.tsheet .ts-x'); if (x) x.focus({preventScroll: true});
 }
-function closeSheet() {
-  const id = sheet, y = window.scrollY; sheet = null; render(); window.scrollTo(0, y);
-  const b = app.querySelector('[data-tk="' + id + '"]'); if (b) b.focus({preventScroll: true});
-}
+function closeSheet() { closeLayer(); }
 function fileBlob(f) { const bin = atob(f.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], {type: f.mime}); }
 async function saveTicket(id, btn) {
   const f = FILES[id]; if (!f) return;
@@ -1592,7 +1596,7 @@ function travel() {
   return zonePage('travel', '', {
     main: () => '<div class="block"><h2>Билеты</h2><div class="tickets">' + state.tickets.map(ticket).join('') + '</div></div>' + trainPlanBlock() + taskBlock('travel'),
     weather: weatherSection,
-    stays: () => drvBlock() + '<div class="block"><h2>Жильё</h2><div class="stays">' + state.stays.map(s => '<div class="stay' + (s.msg ? ' has-msg' : '') + '"><div class="stay-top"><span class="stay-city kti">' + kico('hotel') + esc(s.city) + '</span>' + act(s.status, 'жильё') + '</div><span class="stay-dates">' + esc(s.dates) + ' · ' + s.nights + ' ' + plural(s.nights, 'ночь', 'ночи', 'ночей') + '</span><p>' + esc(s.what) + '</p>' + (s.key ? keyTiles(s.key) : '') + ticketBtns(s) + stayMsg(s) + '</div>').join('') + '</div></div>' + ((state.checkins || []).length ? '<div class="block"><h2>Заселение и выезд</h2><p class="lead">Заселяют обычно с 14:00, выселяют до 12:00. Где поезд или самолёт не совпадает с этим — ниже, что можно сделать.</p><div class="ci-list">' + state.checkins.map(c => '<div><p class="ci-note"><b>' + ddmm(c.date) + '</b> · ' + weekday(c.date) + '</p>' + ciCard(c) + '</div>').join('') + '</div></div>' : '') +
+    stays: () => drvBlock() + '<div class="block"><h2>Жильё</h2><div class="stays">' + state.stays.map(s => '<div class="stay' + (s.msg ? ' has-msg' : '') + '"><div class="stay-top"><span class="stay-city kti">' + kico('hotel') + esc(s.city) + '</span>' + act(s.status, 'жильё') + '</div><span class="stay-dates">' + esc(s.dates) + ' · ' + s.nights + ' ' + plural(s.nights, 'ночь', 'ночи', 'ночей') + '</span><p>' + esc(s.what) + '</p>' + (s.key ? keyTiles(s.key) : '') + addrBtn(stayDrive(s.drive), 'btn stay-addr') + ticketBtns(s) + stayMsg(s) + '</div>').join('') + '</div></div>' + ((state.checkins || []).length ? '<div class="block"><h2>Заселение и выезд</h2><p class="lead">Заселяют обычно с 14:00, выселяют до 12:00. Где поезд или самолёт не совпадает с этим — ниже, что можно сделать.</p><div class="ci-list">' + state.checkins.map(c => '<div><p class="ci-note"><b>' + ddmm(c.date) + '</b> · ' + weekday(c.date) + '</p>' + ciCard(c) + '</div>').join('') + '</div></div>' : '') +
       state.forks.filter(f => STAY_FORKS.includes(f.id)).map(forkBlock).join(''),
     days: () => '<div class="block"><h2>По дням</h2><p class="lead">Время местное. Часовые пояса: Тюмень UTC+5, Омск UTC+6, Казахстан UTC+5, Китай UTC+8.</p>' + calAct() + '<ol class="tl">' + state.timeline.map(e =>
       '<li class="tl-row"><div class="tl-when"><b>' + ddmm(e.date) + '</b><span>' + weekday(e.date) + '</span>' + (e.time ? '<span class="mono">' + e.time + ' <small>' + esc(e.tz) + '</small></span>' : '') + '</div><div class="tl-body"><div class="tl-title kti">' + kico(e.kind || kindOf(e.title), 's') + '<span>' + esc(e.title) + '</span></div><p>' + esc(e.detail) + '</p></div><div class="tl-st">' + act(e.status === 'done' ? 'bought' : e.status, e.title, e.act) + '</div></li>').join('') + '</ol></div>',
@@ -1948,6 +1952,7 @@ function dayView() {
       '<button type="button" class="dh-nav" data-day="next" aria-label="Следующий день"' + (d.idx === d.n - 1 ? ' disabled' : '') + '>' + I.next + '</button></header>' +
     '<div class="daystrip" role="group" aria-label="Дни поездки">' + strip + '</div>' +
     (daySel === defaultDay() ? nowNext() : '') +
+    '<div class="block dquick-top"><h2>Под рукой</h2><div class="dquick">' + quick.join('') + '</div></div>' +
     '<div class="dgrid"><div class="dcol">' +
       '<div class="block"><h2>План дня</h2><ul class="dplan">' + plan.join('') + '</ul></div>' +
       (ciFor(daySel).length ? '<div class="block"><h2>Заселение и выезд</h2><div class="ci-list">' + ciFor(daySel).map(ciCard).join('') + '</div></div>' : '') +
@@ -1957,14 +1962,13 @@ function dayView() {
     '</div><div class="dcol">' +
       (w ? '<div class="block"><h2>Погода</h2><div class="dtile"><div class="dtile-t"><span><b>' + deg(w.tmax) + '</b>днём</span><span><b>' + deg(w.tmin) + '</b>ночью</span></div><p>Бывает от ' + deg(w.cold) + ' до ' + deg(w.warm) + ' · дождь в ' + w.rainP + '% дней' + (w.snowP >= 5 ? ' · снег в ' + w.snowP + '%' : '') + '</p>' + (w.fc ? '<p class="fc">Прогноз (' + fcSrc(w.fc.n) + '): ' + deg(w.fc.tmin) + '…' + deg(w.fc.tmax) + '</p><p>' + esc(agree(w.fc)) + (w.fc.local ? ' · местный: ' + esc(w.fc.local.ru) : '') + '</p>' : '') + (g ? '<p class="wxc-wear"><span class="lab">Что надеть</span><span>' + wearH(g.wear) + '</span></p>' : '') + '</div></div>' : '') +
       crowdBlock(daySel) +
-      (d.night ? '<div class="block"><h2>Где ночуем</h2><div class="dtile"><div class="stay-top"><span class="stay-city kti">' + kico(/поезд/i.test(d.night.where) ? 'train' : /самол/i.test(d.night.where) ? 'plane' : 'hotel') + esc(d.night.where) + '</span>' + act(d.night.status, 'жильё') + '</div><p>' + esc(d.night.note) + '</p></div></div>' : '') +
-      '<div class="block"><h2>Под рукой</h2><div class="dquick">' + quick.join('') + '</div></div>' +
+      (d.night ? '<div class="block"><h2>Где ночуем</h2><div class="dtile"><div class="stay-top"><span class="stay-city kti">' + kico(/поезд/i.test(d.night.where) ? 'train' : /самол/i.test(d.night.where) ? 'plane' : 'hotel') + esc(d.night.where) + '</span>' + act(d.night.status, 'жильё') + '</div><p>' + esc(d.night.note) + '</p>' + (/поезд|самол/i.test(d.night.where) ? '' : addrBtn(nightDrive(d.iso), 'btn stay-addr')) + '</div></div>' : '') +
     '</div></div></div>';
 }
 function setDay(iso) {
   const D = tripDays(), i = D.indexOf(daySel || defaultDay());
   daySel = iso === 'prev' ? D[Math.max(0, i - 1)] : iso === 'next' ? D[Math.min(D.length - 1, i + 1)] : iso;
-  try { history.replaceState(null, '', '#' + hashOf()); } catch (e) {}
+  try { history.replaceState(Object.assign({}, history.state), '', '#' + hashOf()); } catch (e) {}
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
 
@@ -2464,10 +2468,23 @@ function initialView() {
   return 'home';
 }
 let view = initialView();
-function go(z, s) {
-  const zoneChange = z !== view;
+/* ---------- back: each move is a history step, so the phone's Back button returns where you were ---------- */
+// how: 'content' (a link inside a page: Back button shows), 'top' (zone switcher), 'tab' (sections of a zone), 'history' (Back/Forward)
+const backLabel = () => view === 'home' ? 'Главная' : view === 'day' ? 'Мой день, ' + ddmm(daySel || defaultDay()) :
+  ZONES[view].short + (SECTIONS[view] ? ' · ' + ((SECTIONS[view].find(x => x[0] === sub[view]) || [])[1] || '') : '');
+function go(z, s, how) {
+  const zoneChange = z !== view, from = backLabel();
+  if (layers.length) { layers.length = 0; ov = null; sheet = null; }
   view = z; if (s) sub[z] = s; pendingDelete = null;
-  try { history.replaceState(null, '', '#' + hashOf()); } catch (e) {}
+  const h = '#' + hashOf();
+  try {
+    if (how === 'history') {}
+    else if (how === 'tab' || h === location.hash) history.replaceState(Object.assign({}, history.state), '', h);
+    else {
+      history.replaceState(Object.assign({}, history.state, {y: window.scrollY}), '');
+      history.pushState(how === 'top' ? {} : {back: from}, '', h);
+    }
+  } catch (e) {}
   render();
   if (zoneChange) {
     window.scrollTo(0, 0);
@@ -2516,7 +2533,12 @@ setInterval(() => { const el = app.querySelector('.nn'); if (el) el.outerHTML = 
 const placeItem = x => ({title: x.name, cn: x.cn.replace(' · ', '\n'), say: x.say, days: x.days || []});
 const dayDrive = iso => state.drive.filter(x => x.from <= iso && iso <= x.to && !x.pending)
   .concat(state.leisure.cities.flatMap(c => c.items.filter(x => (x.days || []).includes(iso) && x.cn).map(placeItem)));
-const drvBtn = (it, label) => '<button type="button" class="btn ghost" data-show="' + showKey(it) + '">' + I.car + '<span>' + esc(label || 'Водителю: ' + it.title) + '</span></button>';
+// The address alone, for pasting into DiDi or a map: the street line, not the hotel name
+const addrOf = x => x.cn ? x.cn.split('\n').pop() : x.ru.split('\n')[0];
+const addrBtn = (x, cls) => x && !x.pending ? '<button type="button" class="' + (cls || 'btn ghost') + '" data-copy="' + esc(addrOf(x)) + '">' + I.copy + '<span>Скопировать адрес</span></button>' : '';
+const stayDrive = id => id && state.drive.find(x => x.id === id);
+const nightDrive = iso => { const ids = state.stays.map(s => s.drive).filter(Boolean); return state.drive.filter(x => ids.includes(x.id) && iso >= x.from && iso <= x.to).pop(); };
+const drvBtn = (it, label) =>'<button type="button" class="btn ghost" data-show="' + showKey(it) + '">' + I.car + '<span>' + esc(label || 'Водителю: ' + it.title) + '</span></button>';
 function drvBlock() {
   return '<div class="block"><h2>Адреса для такси</h2><p class="lead">Нажмите — адрес откроется крупно на весь экран, телефон можно показать водителю.</p><div class="drv-list">' +
     state.drive.map(x => x.pending
@@ -2528,10 +2550,10 @@ function showView(it) {
   const zh = !!it.cn, phrase = it.kind === 'phrase';
   const pre = phrase ? '<p class="sh-pre-ru">Покажите этот экран</p>'
     : zh ? '<p class="sh-pre" lang="zh">请带我去：</p><p class="sh-pre-ru">«Цин дай во цюй» — отвезите меня сюда</p>' : '<p class="sh-pre-ru">Отвезите, пожалуйста, по адресу:</p>';
-  return '<div class="show" role="dialog" aria-modal="true" aria-label="' + esc(it.title || it.ru || '') + '"><button type="button" class="sh-x" data-ovclose="1">' + I.close + '<span>Закрыть</span></button><div class="sh-body">' + pre +
+  return '<div class="show" role="dialog" aria-modal="true" aria-label="' + esc(it.title || it.ru || '') + '"><button type="button" class="sh-x" data-ovclose="1">' + I.prev + '<span>Назад</span></button><div class="sh-body">' + pre +
     (zh ? '<p class="sh-cn" lang="zh">' + esc(it.cn) + '</p>' + (it.say ? '<p class="sh-say">«' + esc(it.say) + '»</p>' : '') : '<p class="sh-ru">' + esc(it.ru) + '</p>') +
     (it.son ? '<div class="sh-nums">' + (state.help.son.phones || []).map(x => '<a href="tel:' + esc(x.n) + '">' + esc(x.show) + '</a>').join('') + '</div>' : '') +
-    '<p class="sh-title">' + esc(phrase ? it.ru : it.title) + (it.note ? ' · ' + esc(it.note) : '') + '</p></div></div>';
+    '<p class="sh-title">' + esc(phrase ? it.ru : it.title) + (it.note ? ' · ' + esc(it.note) : '') + '</p>' + (phrase || it.son || !(it.cn || it.ru) ? '' : addrBtn(it, 'sh-copy')) + '</div></div>';
 }
 function sosView() {
   const H = state.help, P = H.son.phones || [];
@@ -2558,8 +2580,34 @@ function insBlock(N) {
     '<details class="ins-lim"><summary>Что оплачивает страховка</summary><ul>' + N.limits.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul><p class="ts-hint">' + esc(N.valid) + '</p></details>' +
     '</div></section>';
 }
-function openOv(o) { const y = window.scrollY; ov = o; render(); window.scrollTo(0, y); const x = document.querySelector('.sh-x, .sos .ts-x'); if (x) x.focus({preventScroll: true}); }
-function closeOv() { const k = ov && ov.k, y = window.scrollY; ov = null; render(); window.scrollTo(0, y); if (k === 'sos') { const b = app.querySelector('.sos-fab'); if (b) b.focus({preventScroll: true}); } }
+function openOv(o) { const y = window.scrollY; pushLayer(); sheet = null; ov = o; render(); window.scrollTo(0, y); const x = document.querySelector('.sh-x, .sos .ts-x'); if (x) x.focus({preventScroll: true}); }
+function closeOv() { closeLayer(); }
+/* help sheet, ticket sheet and the big screen stack: Back closes the top one and shows what was under it */
+const layers = [];
+function pushLayer() {
+  layers.push({ov, sheet});
+  try { history.pushState({layer: layers.length}, ''); } catch (e) {}
+}
+function closeLayer() {
+  if (layers.length && history.state && history.state.layer === layers.length) { history.back(); return; }  // popstate restores
+  restoreLayer();
+}
+function restoreLayer() {
+  const was = {ov, sheet}, prev = layers.pop() || {ov: null, sheet: null}, y = window.scrollY;
+  ov = prev.ov; sheet = prev.sheet; render(); window.scrollTo(0, y);
+  if (ov || sheet) return;
+  const b = was.sheet ? app.querySelector('[data-tk="' + was.sheet + '"]') : was.ov && was.ov.k === 'sos' ? app.querySelector('.sos-fab') : null;
+  if (b) b.focus({preventScroll: true});
+}
+window.addEventListener('popstate', e => {
+  const depth = (e.state && e.state.layer) || 0;
+  if (layers.length > depth) { while (layers.length > depth + 1) layers.pop(); restoreLayer(); return; }
+  if (layers.length) { layers.length = 0; ov = null; sheet = null; }
+  const v = parseView(location.hash.replace('#', ''));
+  if (!v) return;
+  go(v, undefined, 'history');
+  window.scrollTo(0, (e.state && e.state.y) || 0);
+});
 
 /* ---------- crowds: weekends, school breaks, events ---------- */
 const CR_LBL = ['Спокойно', 'Людно', 'Толпы'];
@@ -2809,25 +2857,26 @@ function copyText(text, btn) {
 
 /* ---------- events ---------- */
 app.addEventListener('click', e => {
-  const t = e.target.closest('[data-ov],[data-ovclose],[data-show],[data-go],[data-sub],[data-eat],[data-cv],[data-cvsel],[data-day],[data-prep],[data-prepset],[data-copy],[data-toggle],[data-choose],[data-train],[data-del],[data-tk],[data-tkclose],[data-tksave],[data-tkopen],[data-cal],[data-pz]');
+  const t = e.target.closest('[data-back],[data-ov],[data-ovclose],[data-show],[data-go],[data-sub],[data-eat],[data-cv],[data-cvsel],[data-day],[data-prep],[data-prepset],[data-copy],[data-toggle],[data-choose],[data-train],[data-del],[data-tk],[data-tkclose],[data-tksave],[data-tkopen],[data-cal],[data-pz]');
   if (!t || !app.contains(t)) return;
+  if (t.dataset.back) { history.back(); return; }
   if (t.dataset.ov) { openOv({k: t.dataset.ov}); return; }
   if (t.dataset.ovclose) { closeOv(); return; }
   if (t.dataset.show) { const it = SHOW.get(t.dataset.show); if (it) openOv({k: 'show', it}); return; }
   if (ov && t.dataset.sub) ov = null;
   if (t.dataset.pz !== undefined) { pzReplay(t); return; }
   if (t.dataset.eat) { eatCity = t.dataset.eat; if (!t.dataset.sub) { const y = window.scrollY; render(); window.scrollTo(0, y); return; } }
-  if (t.dataset.tk) { ov = null; openSheet(t.dataset.tk); return; }  // a policy opened from the help screen comes on top
+  if (t.dataset.tk) { openSheet(t.dataset.tk); return; }  // a policy opened from the help screen comes on top; Back returns to it
   if (t.dataset.tkclose) { closeSheet(); return; }
   if (t.dataset.tksave) { saveTicket(t.dataset.tksave, t); return; }
   if (t.dataset.tkopen) { openTicket(t.dataset.tkopen); return; }
   if (t.dataset.cal !== undefined) { saveCalendar(t); return; }
-  if (t.dataset.go) { if (t.dataset.day) daySel = t.dataset.day; go(t.dataset.go); return; }
+  if (t.dataset.go) { if (t.dataset.day) daySel = t.dataset.day; go(t.dataset.go, undefined, t.closest('.topbar') ? 'top' : 'content'); return; }
   if (t.dataset.cv) { cvTool(t.dataset.cv); return; }
   if (t.dataset.day) { if (!t.disabled) setDay(t.dataset.day); return; }
   if (t.dataset.prep) { prepFocus(t.dataset.prep); return; }
   if (t.dataset.cvsel) { cvSelect(t.dataset.cvsel); return; }
-  if (t.dataset.sub) { const i = t.dataset.sub.indexOf('-'); go(t.dataset.sub.slice(0, i), t.dataset.sub.slice(i + 1)); return; }
+  if (t.dataset.sub) { const i = t.dataset.sub.indexOf('-'); go(t.dataset.sub.slice(0, i), t.dataset.sub.slice(i + 1), t.closest('.subnav') ? 'tab' : 'content'); return; }
   if (t.dataset.copy !== undefined) { copyText(t.dataset.copy, t); return; }
   if (!editable()) return;
   if (t.dataset.toggle) toggleTask(t.dataset.toggle);
@@ -2854,7 +2903,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') { e.preventDefault(); setDay('prev'); } else if (e.key === 'ArrowRight') { e.preventDefault(); setDay('next'); }
 });
 app.addEventListener('submit', e => { if (e.target.id === 'logform') { e.preventDefault(); if (editable()) addLog(e.target); } });
-window.addEventListener('hashchange', () => { const h = location.hash.replace('#', ''); if (h === hashOf()) return; const v = parseView(h); if (v) go(v); });
+window.addEventListener('hashchange', () => { const h = location.hash.replace('#', ''); if (h === hashOf()) return; const v = parseView(h); if (v) go(v, undefined, 'history'); });
 app.addEventListener('toggle', e => { const d = e.target; if (d && d.tagName === 'DETAILS' && d.dataset.key) { if (d.open) openDetails.add(d.dataset.key); else openDetails.delete(d.dataset.key); } }, true);
 
 /* ---------- boot ---------- */
