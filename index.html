@@ -100,6 +100,8 @@ code{font-size:.84em;background:var(--paper-2);padding:.08em .35em;border-radius
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--paper);border-bottom:1px solid var(--rule-soft);margin-inline:-16px;padding-inline:16px}
 .topbar-in{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-block:8px}
 .topbar-in::-webkit-scrollbar{display:none}
+/* phones: every zone stays in sight on two rows; a sideways scroll was not discoverable */
+@media (max-width:640px){.topbar-in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;gap:6px}.topbar .zbtn{min-height:44px;padding:5px 8px;font-size:.9rem;line-height:1.15;gap:6px;white-space:normal;text-align:left;border-radius:12px}}
 .zbtn{appearance:none;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:8px 14px;border:1px solid var(--rule);border-radius:999px;background:var(--sheet);color:var(--ink);font:600 .95rem var(--font-ui);white-space:nowrap;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
 .zbtn .zdot{width:10px;height:10px;border-radius:50%;background:var(--z)}
 .zbtn:hover{border-color:var(--z)}
@@ -242,6 +244,21 @@ button.zh-now:hover{background:color-mix(in srgb,var(--z-band-ink) 20%,transpare
 @keyframes stamp{from{transform:scale(2.1) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
 details.donebox{border-top:1px solid var(--rule-soft)}
 details.donebox summary{cursor:pointer;padding:10px 0;color:var(--ink-2);font-weight:600;min-height:44px;display:flex;align-items:center;gap:8px}
+/* fold: secondary detail behind a full-width row with a chevron (helper fold() in the script) */
+.fold{border-top:1px solid var(--rule-soft)}
+.fold>summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 2px;cursor:pointer;font-weight:600;color:var(--z-strong,var(--jade-strong))}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"";flex:none;margin-left:auto;width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-3px) rotate(45deg);transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+.fold[open]>summary::after{transform:translateY(2px) rotate(225deg)}
+.fold>summary small{font:600 .82rem var(--font-data);color:var(--ink-3)}
+.fold>summary:hover{color:var(--ink)}
+.fold-in{display:flex;flex-direction:column;gap:12px;padding:2px 0 8px}
+.fold-group{border-top:0;border-bottom:2px solid var(--z,var(--rule))}
+.fold-group>summary{font:700 1.32rem/1.22 var(--font-title);color:var(--ink);min-height:56px}
+.fold-group>summary small{font-size:.9rem}
+.stay-msg .fold,.ci .fold{border-top-color:var(--rule-soft)}
+.stay-msg{gap:0}
+@media (prefers-reduced-motion:reduce){.fold>summary::after{transition:none}}
 @media (max-width:560px){.task{grid-template-columns:minmax(0,1fr)}.task-side{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between}}
 
 /* rows: generic */
@@ -408,9 +425,9 @@ html.noscroll{overflow:hidden}
 .ts-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .ts-head h2{margin:2px 0 0;font-size:1.15rem;line-height:1.3}
 .ts-head .lab{font:600 .8rem var(--font-data);color:var(--z-strong)}
-.ts-x{appearance:none;flex:none;width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer}
-.ts-x svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-.ts-x:hover{border-color:var(--z)}
+.ts-x{appearance:none;flex:none;display:inline-flex;align-items:center;gap:6px;min-height:48px;padding:0 16px 0 12px;border:2px solid var(--ink);border-radius:999px;background:var(--sheet);color:var(--ink);font:700 1rem var(--font-ui);cursor:pointer}
+.ts-x svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.ts-x:hover{background:var(--paper-2)}
 .ts-who{display:flex;gap:8px}
 .ts-who .mini{flex:1;min-height:44px;font-size:.95rem}
 .ts-who .mini[aria-pressed="true"]{background:var(--z-band);border-color:var(--z-band);color:var(--z-band-ink)}
@@ -772,6 +789,7 @@ span.kico.k-taxi{--k:var(--k-taxi);color:var(--k-taxi-ink)}
 .ci-verdict.must{border-color:var(--seal);background:var(--seal-wash)}.ci-verdict.must b{color:var(--seal)}
 .ci-verdict.soft{border-color:var(--pen);background:var(--pen-wash)}.ci-verdict.soft b{color:var(--pen)}
 .ci-verdict ul{margin:6px 0 0;padding-left:1.1em;color:var(--ink)}
+.ci-why{margin:0;padding-left:1.1em;color:var(--ink)}
 .ci-calc{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--paper)}
 .ci-calc h4{margin:0;font:700 .95rem var(--font-ui)}
 .ci-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
@@ -1118,6 +1136,8 @@ let retried = false;
 let pendingDelete = null;
 const justStamped = new Set();
 const openDetails = new Set();
+// Secondary detail folds behind a tappable row so phone pages stay short; the open state survives re-renders
+const fold = (key, summary, body, cls) => body ? '<details class="fold' + (cls ? ' ' + cls : '') + '" data-key="' + esc(key) + '"' + (openDetails.has(key) ? ' open' : '') + '><summary>' + summary + '</summary><div class="fold-in">' + body + '</div></details>' : '';
 
 const ZONES = {
   home:{name:'Главная', short:'Главная'},
@@ -1459,11 +1479,11 @@ const wearH = w => { const i = w.indexOf('. '); return i < 0 ? '<b>' + esc(w) + 
 /* ready message to the accommodation: text in Russian, WhatsApp with it prefilled, copy in Russian or English */
 function stayMsg(s) {
   const g = s.msg; if (!g) return '';
-  return '<div class="stay-msg"><span class="lab">' + esc(g.lab || 'Сообщение апартаментам') + '</span><p class="msg-when">' + esc(g.when) + '</p><p class="msg-text">' + esc(g.ru) + '</p><div class="msg-acts">' +
+  return '<div class="stay-msg">' + fold('msg-' + s.city + s.dates, esc(g.lab || 'Сообщение апартаментам'), '<p class="msg-when">' + esc(g.when) + '</p><p class="msg-text">' + esc(g.ru) + '</p><div class="msg-acts">' +
     (g.zh ? '<button type="button" class="btn" data-copy="' + esc(g.zh) + '">' + I.copy + '<span>Скопировать по-китайски</span></button>' : '') +
     (g.phone ? '<a class="btn" href="https://wa.me/' + g.phone + '?text=' + encodeURIComponent(g.ru) + '" target="_blank" rel="noopener">' + I.open + '<span>Открыть в WhatsApp</span></a>' : '') +
     '<button type="button" class="btn ghost" data-copy="' + esc(g.ru) + '">' + I.copy + '<span>Скопировать по-русски</span></button>' +
-    '<button type="button" class="btn ghost" data-copy="' + esc(g.en) + '">' + I.copy + '<span>Скопировать по-английски</span></button></div></div>';
+    '<button type="button" class="btn ghost" data-copy="' + esc(g.en) + '">' + I.copy + '<span>Скопировать по-английски</span></button></div>') + '</div>';
 }
 function ticketBtns(t) {
   if (!t || !t.files) return '';
@@ -1484,7 +1504,7 @@ function sheetView() {
   if (f && !hasViewer) acts.push('<button type="button" class="btn ghost" data-tkopen="' + sheet + '">' + I.open + '<span>Открыть' + (isPdf ? ' PDF' : '') + '</span></button>');
   return '<div class="ts-bg" data-tkclose="1"></div><div class="tsheet zone-travel" role="dialog" aria-modal="true" aria-labelledby="ts-title">' +
     '<div class="ts-head"><div><span class="lab">' + (ins ? 'действует до ' + esc(t.until) : stay ? esc(t.dates) + ' · ' + t.nights + ' ' + plural(t.nights, 'ночь', 'ночи', 'ночей') : ddmm(t.date) + ' · ' + weekday(t.date) + ' · ' + esc(t.dep)) + '</span><h2 id="ts-title">' + esc(name) + ' · ' + esc(route) + '</h2></div>' +
-      '<button type="button" class="ts-x" data-tkclose="1" aria-label="Закрыть">' + I.close + '</button></div>' +
+      '<button type="button" class="ts-x" data-tkclose="1">' + I.close + '<span>Закрыть</span></button></div>' +
     (t.files.length > 1 ? '<div class="ts-who" role="group" aria-label="Чей билет">' + t.files.map(x => '<button type="button" class="mini" data-tk="' + x.id + '" aria-pressed="' + (x.id === sheet) + '">' + WHO[x.who] + '</button>').join('') + '</div>' : '') +
     (stay ? (doc ? '<p class="ts-seat">' + esc(doc.purpose) + '</p>' : '') : who === 'both' ? (t.seats ? '<p class="ts-seat">' + esc(t.seats) + '</p>' : '') : doc ? '<p class="ts-seat">' + esc(WHO[who]) + ': ' + esc(doc.purpose) + '</p>' : '') +
     (f ? '<img class="ts-img" src="' + src + '" alt="' + esc((ins ? 'Страховой полис' : stay ? 'Бронь: ' + t.city + ', ' + t.dates : 'Билет: ' + name + ', ' + t.from + ' → ' + t.to + ', ' + ddmm(t.date)) + ', ' + WHO[who].toLowerCase()) + '">'
@@ -1736,15 +1756,15 @@ const dishBtn = d => '<button type="button" class="dish" data-show="' + showKey(
 function eatCard(p, compact) {
   const taxi = p.addr_cn ? '<button type="button" class="mini" data-show="' + showKey({title: p.name, cn: p.cn + '\n' + p.addr_cn, say: p.say}) + '">' + I.car + ' Показать водителю</button>' : '';
   const order = p.order || [], top = order.slice(0, 2), key = 'eat-' + p.id;
-  // two dishes stay visible; the rest, price and hours fold away so a phone page stays short
-  const more = compact ? '' : (order.length > 2 ? order.slice(2).map(dishBtn).join('') : '') + (p.price ? '<p class="pc-how"><b>Сколько.</b> ' + esc(p.price) + '</p>' : '') + (p.hours ? '<p class="pc-how"><b>Часы.</b> ' + esc(p.hours) + '</p>' : '');
+  // on the food page the dishes, price, hours and the caveat fold away so a phone page stays short; the day view shows two dishes
+  const warn = p.warn ? '<p class="pc-warn">' + I.alert + '<span>' + esc(p.warn) + '</span></p>' : '';
+  const more = compact ? '' : (order.length ? '<div class="e-order"><span class="lab">Нажмите блюдо, чтобы показать официанту</span>' + order.map(dishBtn).join('') + '</div>' : '') + (p.price ? '<p class="pc-how"><b>Сколько.</b> ' + esc(p.price) + '</p>' : '') + (p.hours ? '<p class="pc-how"><b>Часы.</b> ' + esc(p.hours) + '</p>' : '') + warn;
   return '<article class="ecard' + (compact ? ' compact' : '') + '"><span class="stamp-corner">' + esc(p.meal) + '</span>' +
     '<span class="pc-name">' + esc(p.name) + '</span><span class="say-s"><span class="cjk" lang="zh">' + esc(p.cn) + '</span>' + (p.say ? ' — «' + esc(p.say) + '»' : '') + '</span>' +
     '<span class="e-near">' + I.pin + '<span>' + esc(p.near) + '</span></span>' +
     '<p>' + esc(p.what) + '</p>' +
-    (top.length ? '<div class="e-order"><span class="lab">Что заказать — нажмите, чтобы показать официанту</span>' + top.map(dishBtn).join('') + '</div>' : '') +
-    (more ? '<details class="donebox e-more" data-key="' + key + '"' + (openDetails.has(key) ? ' open' : '') + '><summary>' + (order.length > 2 ? 'Ещё блюда, цены и часы' : 'Цены и часы') + '</summary><div class="e-order">' + more + '</div></details>' : '') +
-    (p.warn ? '<p class="pc-warn">' + I.alert + '<span>' + esc(p.warn) + '</span></p>' : '') +
+    (compact && top.length ? '<div class="e-order"><span class="lab">Что заказать — нажмите, чтобы показать официанту</span>' + top.map(dishBtn).join('') + '</div>' : '') +
+    (compact ? warn : fold(key, order.length ? 'Что заказать' + (p.warn ? ' и советы' : '') + ' <small>' + order.length + ' ' + plural(order.length, 'блюдо', 'блюда', 'блюд') + '</small>' : 'Цены, часы и советы', more)) +
     '<div class="pc-foot">' + (compact ? '' : taxi) + (p.confidence === 'verified' ? '' : tag('check', 'уточнить на месте')) + '</div></article>';
 }
 function eatPage() {
@@ -1834,9 +1854,9 @@ function docs() {
   return zonePage('docs', '', {
     passports: () => '<div class="block"><h2>Паспорта</h2><p class="lead">Считаны с фото и проверены по контрольным цифрам машиночитаемой строки. Нажмите на поле, чтобы скопировать его в анкету отеля, билета или больницы.</p><div class="pp-grid">' + state.persons.map(ppCard).join('') + '</div></div>',
     wait: () => '<div class="block"><h2>Ожидаются</h2><p class="lead">Как появится — положите файл в папку <code>inbox</code> проекта или пришлите мне. Я разложу и сверю с паспортами.</p><div class="rows">' + state.expected.map(x => '<div class="row"><div class="row-main"><div class="row-title">' + esc(x.title) + '</div><p>' + esc(x.why || '') + '</p></div><div class="row-st">' + tag('missing') + '</div></div>').join('') + '</div></div>' + taskBlock('docs'),
-    files: () => groups.map(g => '<div class="block"><h2>' + esc(g) + '</h2><div class="rows">' + state.docs.filter(d => d.group === g).map(d =>
+    files: () => '<div class="block">' + groups.map(g => fold('files-' + g, esc(g) + ' <small>' + state.docs.filter(d => d.group === g).length + '</small>', '<div class="rows">' + state.docs.filter(d => d.group === g).map(d =>
       '<div class="row"><div class="row-main"><div class="row-title">' + esc(d.title) + '<span class="who">' + esc(WHO[d.who]) + '</span></div><p>' + esc(d.purpose) + '</p>' + (d.check ? '<p>' + esc(d.check) + '</p>' : '') +
-      '<p class="meta">' + (d.date ? '<span>' + esc(d.date) + '</span>' : '') + (d.valid ? '<span>' + esc(d.valid) + '</span>' : '') + fileLink(d.file) + '</p>' + (d.blob && tkOf(d.blob) ? '<button type="button" class="mini" data-tk="' + d.blob + '">' + I.travel + (tkOf(d.blob).ins ? ' Смотреть полис' : tkOf(d.blob).city ? ' Смотреть бронь' : ' Смотреть билет') + '</button>' : '') + '</div><div class="row-st">' + tag(d.status) + '</div></div>').join('') + '</div></div>').join(''),
+      '<p class="meta">' + (d.date ? '<span>' + esc(d.date) + '</span>' : '') + (d.valid ? '<span>' + esc(d.valid) + '</span>' : '') + fileLink(d.file) + '</p>' + (d.blob && tkOf(d.blob) ? '<button type="button" class="mini" data-tk="' + d.blob + '">' + I.travel + (tkOf(d.blob).ins ? ' Смотреть полис' : tkOf(d.blob).city ? ' Смотреть бронь' : ' Смотреть билет') + '</button>' : '') + '</div><div class="row-st">' + tag(d.status) + '</div></div>').join('') + '</div>', 'fold-group')).join('') + '</div>',
     check: () => '<div class="block"><h2>Сверка с паспортами</h2><p class="lead">Каждый документ сверяется с паспортом: фамилия и имя латиницей, номер паспорта, дата рождения.</p>' + recon() + '</div>'
   });
 }
@@ -1850,9 +1870,9 @@ function prepCard(x, i) {
   const st = x.status ? PST[x.status] : ['buy', 'Решить'];
   const btn = (v, l) => '<button type="button" class="mini" data-prepset="' + x.id + ':' + v + '" aria-pressed="' + (x.status === v) + '">' + l + '</button>';
   return '<article class="pcard2" id="prep-' + x.id + '"><div class="pc-top"><span class="pc-num ' + (x.status || '') + '">' + (i + 1) + '</span><div style="min-width:0;flex:1"><div class="pc-title">' + esc(x.title) + '</div><div class="pc-meta"><span>' + esc(WHO[x.who]) + '</span><span>сейчас: ' + esc(x.have) + '</span><span>' + esc(x.where) + ' · ' + esc(x.time) + '</span></div></div>' + tag(st[0], st[1]) + '</div>' +
-    '<div class="pc-bars"><span>Понадобится</span><span class="pc-bar"><i style="width:' + x.prob + '%"></i></span><b class="mono">~' + x.prob + '%</b><span>Влияет на лечение</span><span class="pc-bar imp"><i style="width:' + (x.impact * 20) + '%"></i></span><b class="mono">' + Math.round(x.impact) + ' из 5</b></div>' +
     '<p class="pc-why">' + esc(x.why) + '</p>' +
-    '<div class="pc-fork"><div><span class="lab">Подтвердит</span><span>' + esc(x.confirm) + '</span></div><div><span class="lab">Исключит</span><span>' + esc(x.exclude) + '</span></div><div><span class="lab">Если сделать</span><span>' + esc(x.ifDo) + '</span></div><div><span class="lab">Если не делать</span><span>' + esc(x.ifSkip) + '</span></div></div>' +
+    fold('prep-' + x.id, 'Насколько важно и что будет без этого', '<div class="pc-bars"><span>Понадобится</span><span class="pc-bar"><i style="width:' + x.prob + '%"></i></span><b class="mono">~' + x.prob + '%</b><span>Влияет на лечение</span><span class="pc-bar imp"><i style="width:' + (x.impact * 20) + '%"></i></span><b class="mono">' + Math.round(x.impact) + ' из 5</b></div>' +
+    '<div class="pc-fork"><div><span class="lab">Подтвердит</span><span>' + esc(x.confirm) + '</span></div><div><span class="lab">Исключит</span><span>' + esc(x.exclude) + '</span></div><div><span class="lab">Если сделать</span><span>' + esc(x.ifDo) + '</span></div><div><span class="lab">Если не делать</span><span>' + esc(x.ifSkip) + '</span></div></div>') +
     (editable() ? '<div class="pc-acts">' + btn('todo', 'Сделаем') + btn('done', 'Уже есть') + btn('skip', 'Не нужно') + '</div>' : '') + '</article>';
 }
 function prepSection() {
@@ -2562,7 +2582,7 @@ function sosView() {
         (x.wechat ? '<span class="sos-wc">WeChat: <b>' + esc(x.show) + '</b></span>' : '')).join('') + '</div>' + (H.son.note ? '<p class="ts-hint">' + esc(H.son.note) + '</p>' : '') + '</div></section>'
     : '<p class="ts-none">Здесь будет кнопка «Позвонить сыну» — номер пока не добавлен.</p>';
   return '<div class="ts-bg" data-ovclose="1"></div><div class="tsheet sos zone-health" role="dialog" aria-modal="true" aria-labelledby="sos-h">' +
-    '<div class="ts-head"><div><span class="lab">Помощь</span><h2 id="sos-h">Если что-то случилось</h2></div><button type="button" class="ts-x" data-ovclose="1" aria-label="Закрыть">' + I.close + '</button></div>' +
+    '<div class="ts-head"><div><span class="lab">Помощь</span><h2 id="sos-h">Если что-то случилось</h2></div><button type="button" class="ts-x" data-ovclose="1">' + I.close + '<span>Закрыть</span></button></div>' +
     son +
     '<div class="sos-nums">' + H.numbers.map(x => '<a class="sos-num" href="tel:' + x.n + '"><b>' + x.n + '</b><span>' + esc(x.t) + '</span><small>' + esc(x.where) + '</small></a>').join('') + '</div>' +
     '<section class="sos-sec"><h3>Сказать или показать</h3><div class="sos-list">' + H.phrases.map(x => '<button type="button" class="sos-ph" data-show="' + showKey(Object.assign({kind: 'phrase'}, x)) + '"><span class="cjk" lang="zh">' + esc(x.cn) + '</span><b>«' + esc(x.say) + '»</b><small>' + esc(x.ru) + ' · нажмите, чтобы показать крупно</small></button>').join('') + '</div></section>' +
@@ -2738,7 +2758,7 @@ function ciCard(c) {
   const P = ciPlan(c), A = P.A;
   const head = '<div class="ci-head"><b class="kti">' + kico('hotel') + esc(c.city) + ': когда можно в номер</b>' +
     (c.done || !P.rec || c.chosen === 'prev' ? '<span class="ci-wait ok">Ждать не нужно</span>' : '<span class="ci-wait">Ждать ' + ciHours(P.w0, P.w1) + '</span>') + '</div>';
-  const verdict = (P.rec ? '<div class="ci-verdict ' + P.lvl + '"><b>' + esc(CI_VERDICT[P.lvl === 'soft' ? P.rec : P.lvl]) + '</b><ul>' + P.why.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>' : '') + (c.done || c.chosenText ? '<p class="ci-done">' + SEAL_I + '<span>' + esc(c.done || c.chosenText) + '</span></p>' : '');
+  const verdict = (P.rec ? '<div class="ci-verdict ' + P.lvl + '"><b>' + esc(CI_VERDICT[P.lvl === 'soft' ? P.rec : P.lvl]) + '</b></div>' : '') + (c.done || c.chosenText ? '<p class="ci-done">' + SEAL_I + '<span>' + esc(c.done || c.chosenText) + '</span></p>' : '');
   // bar: airport / road / wait / room, by the middle of each range
   const air = (P.s0 + P.s1) / 2, road = (A.road[0] + A.road[1]) / 2, wait = Math.max(0, (P.w0 + P.w1) / 2), tot = air + road + wait + 60;
   const fr = n => (n / tot * 100).toFixed(1) + '%';
@@ -2749,11 +2769,12 @@ function ciCard(c) {
     '<li class="sum"><span>Итого до такси</span><b>' + (P.s0 === P.s1 ? P.s0 : P.s0 + '–' + P.s1) + ' мин</b></li></ol>' +
     (P.areas.length ? '<table class="ci-areas"><thead><tr><th>Куда ехать</th><th>Такси</th><th>У отеля</th><th>Ждать</th></tr></thead><tbody>' + P.areas.map(a => '<tr' + (a.plan ? ' class="plan"' : '') + '><td>' + esc(a.n) + (a.plan ? ' <small>план</small>' : '') + '</td><td>' + a.road[0] + '–' + a.road[1] + ' мин</td><td>' + ciRange(a.r0, a.r1) + '</td><td><b>' + (a.r0 >= P.rule ? '—' : ciHours(P.rule - a.r1, P.rule - a.r0)) + '</b></td></tr>').join('') + '</tbody></table>' : '') +
     (c.roadNote ? '<p class="ci-note">' + esc(c.roadNote) + '</p>' : '') + '</div>' : '';
-  if (c.done || !P.rec) return '<div class="ci">' + head + verdict + bar + steps + (c.note ? '<p class="ci-note">' + esc(c.note) + '</p>' : '') + '</div>';
-  return '<div class="ci">' + head + verdict + bar + steps +
-    '<p class="ci-q">Номер освободится только в ' + c.rule + '. Три пути:</p>' + ciOpts('in', P.rec, c.chosen) +
+  const key = 'ci-' + c.date + c.kind + c.city, note = c.note ? '<p class="ci-note">' + esc(c.note) + '</p>' : '';
+  const why = P.rec && P.why.length ? '<ul class="ci-why">' + P.why.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '';
+  if (c.done || !P.rec) return '<div class="ci">' + head + verdict + fold(key, why ? 'Почему и расчёт по времени' : 'Расчёт по времени', why + bar + steps + note) + '</div>';
+  return '<div class="ci">' + head + verdict +
     (c.warn ? '<p class="ci-warn">' + I.alert + '<span>' + esc(c.warn) + '</span></p>' : '') +
-    (c.note ? '<p class="ci-note">' + esc(c.note) + '</p>' : '') + '</div>';
+    fold(key, 'Почему, расчёт по времени и три пути', why + bar + steps + '<p class="ci-q">Номер освободится только в ' + c.rule + '. Три пути:</p>' + ciOpts('in', P.rec, c.chosen) + note) + '</div>';
 }
 const ciOpts = (k, rec, ch) => '<div class="ci-opts">' + CI_OPTS[k].map(o => '<div class="ci-opt' + (o[0] === (ch || rec) ? ' rec' : '') + '">' + (o[0] === (ch || rec) ? '<span class="ci-rec">' + (ch ? 'Выбрано' : 'Рекомендую') + '</span>' : '') + '<h4>' + o[1] + esc(o[2]) + '</h4><p>' + esc(o[3]) + '</p><span class="g ' + (o[4] ? 'yes' : 'no') + '">' + (o[4] ? 'Точно' : 'Не гарантировано') + '</span></div>').join('') + '</div>';
 function ciOut(c) {
@@ -2766,7 +2787,7 @@ function ciOut(c) {
   const rec = gap >= 360 ? 'extra' : gap > 120 ? 'late' : 'bags';
   const verdict = '<div class="ci-verdict ' + (rec === 'extra' ? 'strong' : 'soft') + '"><b>' + (rec === 'extra' ? 'Рекомендую: номер до вечера — поздний выезд или ещё сутки' : rec === 'late' ? 'Рекомендую: попросить поздний выезд' : 'Можно просто сдать чемоданы') + '</b><ul><li>' +
     esc('Номер сдать в ' + c.rule + ', а уезжать в ' + c.at + ': ' + ciHrs(gap) + ' без номера.') + '</li>' + (rec === 'extra' ? '<li>Перед ночным рейсом лучше отдохнуть в номере, а не ждать с чемоданами.</li>' : '') + '</ul></div>';
-  return '<div class="ci">' + head + verdict + bar + '<p class="ci-q">Три пути:</p>' + ciOpts('out', rec) + (c.note ? '<p class="ci-note">' + esc(c.note) + '</p>' : '') + '</div>';
+  return '<div class="ci">' + head + verdict + fold('ci-' + c.date + c.kind + c.city, 'Расчёт по времени и три пути', bar + '<p class="ci-q">Три пути:</p>' + ciOpts('out', rec) + (c.note ? '<p class="ci-note">' + esc(c.note) + '</p>' : '')) + '</div>';
 }
 const ciFor = iso => (state.checkins || []).filter(c => c.date === iso);
 
