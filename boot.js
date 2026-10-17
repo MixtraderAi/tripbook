@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 
-const CONFIG = /*CONFIG*/{"DATA_ENDPOINTS": ["./data.json", "https://tripbook-five.vercel.app/data.json", "https://mixtraderai.github.io/tripbook/data.json"], "FETCH_TIMEOUT_MS": 3500, "WEATHER_TIMEOUT_MS": 15000, "LINK_SECRET": null, "BUILD": "ebcf09be51"}/*END*/;
+const CONFIG = /*CONFIG*/{"DATA_ENDPOINTS": ["./data.json", "https://tripbook-five.vercel.app/data.json", "https://mixtraderai.github.io/tripbook/data.json"], "FETCH_TIMEOUT_MS": 3500, "WEATHER_TIMEOUT_MS": 15000, "LINK_SECRET": null, "BUILD": "41d3407a6b"}/*END*/;
 const WX = /*WX*/{"cities": {"tyumen": [57.15, 65.53], "petro": [54.87, 69.15], "karaganda": [49.8, 73.1], "almaty": [43.24, 76.89], "xian": [34.34, 108.94], "chengdu": [30.66, 104.06]}, "models": {"ecmwf": "ecmwf_ifs025", "gfs": "gfs_seamless", "icon": "icon_seamless", "cma": "cma_grapes_global", "jma": "jma_seamless"}}/*END*/;
 
 const readJSON = id => { const el = document.getElementById(id); if (!el) return null; try { return JSON.parse(el.textContent); } catch (e) { return null; } };
@@ -27,18 +27,18 @@ const CryptoEngine = {
     for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
     return out;
   },
-  async deriveKey(password, saltB64) {
-    const id = saltB64 + '|' + password;
+  async deriveKey(password, saltB64, iterations) {
+    const id = saltB64 + '|' + iterations + '|' + password;
     if (this.keys.has(id)) return this.keys.get(id);
     const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), {name: 'PBKDF2'}, false, ['deriveKey']);
     const key = await crypto.subtle.deriveKey(
-      {name: 'PBKDF2', salt: this.base64ToBuf(saltB64), iterations: 100000, hash: 'SHA-256'},
+      {name: 'PBKDF2', salt: this.base64ToBuf(saltB64), iterations, hash: 'SHA-256'},
       material, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
     this.keys.set(id, key);
     return key;
   },
   async decryptPayload(enc, password) {
-    const key = await this.deriveKey(password, enc.salt);
+    const key = await this.deriveKey(password, enc.salt, enc.iter || 100000);  // payloads before "iter" used 100 000
     const plain = await crypto.subtle.decrypt({name: 'AES-GCM', iv: this.base64ToBuf(enc.iv)}, key, this.base64ToBuf(enc.cipher));
     if (!enc.gz) return JSON.parse(new TextDecoder().decode(plain));
     const text = await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
@@ -290,7 +290,7 @@ async function refresh(manual) {
   busy = false;
   // five weather models answer slower than the trip data: the status does not wait for them
   wx.then(n => { if (n && !pinChanged) freshArrived(); });
-  if (pinChanged) { status('off', 'ПИН-код сменился — введите новый', {label: 'Ввести ПИН', run: () => forgetPin()}); return; }
+  if (pinChanged) { status('off', 'ПИН-код сменился — введите новый', {label: 'Ввести ПИН', run: () => forgetPin(true)}); return; }
   if (dataNew) { freshArrived(); if (!ok) return; }
   if (pending) return;
   if (ok) status('ok', 'Данные актуальны (обновлено: ' + hhmm(Date.now()) + ')');
@@ -342,10 +342,11 @@ async function unlock(pin) {
   cands.sort((a, b) => String(b.data.updatedAt).localeCompare(String(a.data.updatedAt)));
   const best = cands[0];
   const state = await CryptoEngine.decryptPayload(best.data, pw);
-  const fileSrc = [best.files, saved.files, FALLBACK_ENCRYPTED_DATA && FALLBACK_ENCRYPTED_DATA.files].find(f => f && f.hash === best.data.filesHash);
-  let ef = fileSrc || null;
-  if (!ef && best.url) { try { ef = await fetchFiles(best.url, best.data.filesHash); } catch (e) {} }
-  const files = ef ? await CryptoEngine.decryptPayload(ef, pw) : {};
+  // the hash names the content, not the key: after a PIN change the copy on the phone has the right hash but the old key
+  const fileSrcs = [best.files, saved.files, FALLBACK_ENCRYPTED_DATA && FALLBACK_ENCRYPTED_DATA.files].filter(f => f && f.hash === best.data.filesHash);
+  let ef = null, files = {};
+  for (const f of fileSrcs) { try { files = await CryptoEngine.decryptPayload(f, pw); ef = f; break; } catch (e) {} }
+  if (!ef && best.url) { try { const f = await fetchFiles(best.url, best.data.filesHash); files = await CryptoEngine.decryptPayload(f, pw); ef = f; } catch (e) {} }
   LS.set(K_PIN, pin);
   const plain = {state, files, updatedAt: best.data.updatedAt, filesHash: ef ? best.data.filesHash : null};
   await dbPut({plain, enc: {data: best.data, files: ef || undefined}});
@@ -355,13 +356,13 @@ async function unlock(pin) {
 }
 
 // the encrypted copy stays on the phone, so a new PIN opens it again even without internet
-async function forgetPin() {
-  if (!confirm('Приложение попросит ПИН-код ещё раз. Поездка останется в телефоне.')) return;
+async function forgetPin(asked) {  // asked: the PIN already changed, no need to confirm
+  if (!asked && !confirm('Приложение попросит ПИН-код ещё раз. Поездка останется в телефоне.')) return;
   LS.del(K_PIN);
   await dbPut({plain: undefined});
   location.reload();
 }
-document.getElementById('pwa-reset').addEventListener('click', forgetPin);
+document.getElementById('pwa-reset').addEventListener('click', () => forgetPin());
 document.getElementById('pwa-build').textContent = 'Версия ' + CONFIG.BUILD;
 
 /* ---------- boot ---------- */

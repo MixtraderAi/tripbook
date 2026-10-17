@@ -817,6 +817,12 @@ span.kico.k-taxi{--k:var(--k-taxi);color:var(--k-taxi-ink)}
 .dnotes svg{color:var(--z-strong);margin-top:.22em}
 .dquick{display:flex;flex-wrap:wrap;gap:8px}
 .dquick .btn{border-radius:999px}
+.cnv{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border:1.5px solid var(--rule);border-radius:14px;background:var(--sheet)}
+.cnv-row{display:inline-flex;align-items:center;gap:10px;font-weight:700}
+.cnv-in{width:7.5ch;min-height:48px;padding:0 12px;border:1.5px solid var(--ink-3);border-radius:10px;background:var(--paper);color:var(--ink);font:700 1.25rem var(--font-data)}
+.cnv-in:focus-visible{outline:3px solid var(--jade);outline-offset:2px}
+.cnv-out{font:800 1.3rem var(--font-data);color:var(--ink)}
+.cnv-rate{flex-basis:100%;color:var(--ink-3);font-size:.86rem}
 .dideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px}
 .didea{padding:12px 14px;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;display:flex;flex-direction:column;gap:6px;--z:var(--leisure)}
 .didea .big{font:700 1.5rem/1.1 var(--font-cjk);color:var(--leisure)}
@@ -901,9 +907,12 @@ span.kico.k-taxi{--k:var(--k-taxi);color:var(--k-taxi-ink)}
 
 
 /* help button, SOS sheet, big "show" screen, now & next */
-.sos-fab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:30;display:inline-flex;align-items:center;gap:8px;min-height:54px;padding:0 20px 0 16px;border:0;border-radius:999px;background:var(--seal);color:var(--on-seal);font:800 1.05rem var(--font-ui);box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
-.sos-fab svg,.sos-call svg,.drv-x svg,.mini svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.sos-fab:focus-visible,.sh-x:focus-visible,.drv:focus-visible,.sos-ph:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.fabs{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:30;display:flex;align-items:center;gap:10px}
+.taxi-fab{display:inline-flex;align-items:center;gap:8px;min-height:54px;padding:0 20px 0 16px;border:0;border-radius:999px;background:var(--k-taxi);color:var(--k-taxi-ink);font:800 1.05rem var(--font-ui);box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
+@media (max-width:360px){.fabs{gap:8px}.taxi-fab,.sos-fab{padding:0 14px 0 12px;font-size:1rem}}
+.sos-fab{display:inline-flex;align-items:center;gap:8px;min-height:54px;padding:0 20px 0 16px;border:0;border-radius:999px;background:var(--seal);color:var(--on-seal);font:800 1.05rem var(--font-ui);box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
+.sos-fab svg,.taxi-fab svg,.sos-call svg,.drv-x svg,.mini svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sos-fab:focus-visible,.taxi-fab:focus-visible,.sh-x:focus-visible,.drv:focus-visible,.sos-ph:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 .sos{gap:14px}
 .sos-call small{font-weight:600;opacity:.85}
 .sos-apps{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -930,6 +939,9 @@ span.kico.k-taxi{--k:var(--k-taxi);color:var(--k-taxi-ink)}
 .sh-copy{display:inline-flex;align-items:center;gap:8px;min-height:50px;margin-top:8px;padding:0 20px;border:2px solid #111;border-radius:999px;background:#fff;color:#111;font:700 1.02rem var(--font-ui);cursor:pointer}
 .sh-copy svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .stay-addr{align-self:flex-start}
+.sh-acts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.sh-copy.on{background:#111;color:#fff}
+.fold-past{margin-bottom:12px}
 .backbar{appearance:none;display:inline-flex;align-items:center;gap:8px;min-height:48px;margin-top:12px;padding:0 18px 0 12px;border:1.5px solid var(--z,var(--rule));border-radius:999px;background:var(--sheet);color:var(--z-strong,var(--ink));font:600 1rem/1.25 var(--font-ui);text-align:left;cursor:pointer}
 .backbar svg{width:20px;height:20px;stroke-width:2.2}
 .backbar:hover{background:var(--z-wash,var(--paper-2))}
@@ -1136,6 +1148,9 @@ let retried = false;
 let pendingDelete = null;
 const justStamped = new Set();
 const openDetails = new Set();
+/* tickets, days and check-ins already behind us fold into one «Прошло: N» row, so lists shorten as the trip goes */
+const pastList = (key, arr, dateOf, wrap) => { const t = isoOf(todayUTC()), P = arr.filter(x => dateOf(x) < t), N = arr.filter(x => dateOf(x) >= t);
+  return fold('past-' + key, 'Прошло: ' + P.length, P.length ? wrap(P) : '', 'fold-past') + (N.length ? wrap(N) : ''); };
 // Secondary detail folds behind a tappable row so phone pages stay short; the open state survives re-renders
 const fold = (key, summary, body, cls) => body ? '<details class="fold' + (cls ? ' ' + cls : '') + '" data-key="' + esc(key) + '"' + (openDetails.has(key) ? ' open' : '') + '><summary>' + summary + '</summary><div class="fold-in">' + body + '</div></details>' : '';
 
@@ -1180,6 +1195,7 @@ const I = {
   open:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 4.5H19.5V10.5M19.5 4.5l-8 8"/><path d="M17 14v5.5H4.5V7H10"/></svg>',
   close:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   phone:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/></svg>',
+  sound:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
   car:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16v-4l2-5h12l2 5v4z"/><path d="M4 12h16"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></svg>',
   pin:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
 };
@@ -1614,12 +1630,12 @@ function trainDay() {
 function travel() {
   const t = state.trip, stay = daysBetween(parseISO(t.entry), parseISO(t.exit)) + 1;
   return zonePage('travel', '', {
-    main: () => '<div class="block"><h2>Билеты</h2><div class="tickets">' + state.tickets.map(ticket).join('') + '</div></div>' + trainPlanBlock() + taskBlock('travel'),
+    main: () => '<div class="block"><h2>Билеты</h2>' + pastList('tk', state.tickets, x => x.arrDate || x.date, xs => '<div class="tickets">' + xs.map(ticket).join('') + '</div>') + '</div>' + trainPlanBlock() + taskBlock('travel'),
     weather: weatherSection,
-    stays: () => drvBlock() + '<div class="block"><h2>Жильё</h2><div class="stays">' + state.stays.map(s => '<div class="stay' + (s.msg ? ' has-msg' : '') + '"><div class="stay-top"><span class="stay-city kti">' + kico('hotel') + esc(s.city) + '</span>' + act(s.status, 'жильё') + '</div><span class="stay-dates">' + esc(s.dates) + ' · ' + s.nights + ' ' + plural(s.nights, 'ночь', 'ночи', 'ночей') + '</span><p>' + esc(s.what) + '</p>' + (s.key ? keyTiles(s.key) : '') + addrBtn(stayDrive(s.drive), 'btn stay-addr') + ticketBtns(s) + stayMsg(s) + '</div>').join('') + '</div></div>' + ((state.checkins || []).length ? '<div class="block"><h2>Заселение и выезд</h2><p class="lead">Заселяют обычно с 14:00, выселяют до 12:00. Где поезд или самолёт не совпадает с этим — ниже, что можно сделать.</p><div class="ci-list">' + state.checkins.map(c => '<div><p class="ci-note"><b>' + ddmm(c.date) + '</b> · ' + weekday(c.date) + '</p>' + ciCard(c) + '</div>').join('') + '</div></div>' : '') +
+    stays: () => drvBlock() + '<div class="block"><h2>Жильё</h2><div class="stays">' + state.stays.map(s => '<div class="stay' + (s.msg ? ' has-msg' : '') + '"><div class="stay-top"><span class="stay-city kti">' + kico('hotel') + esc(s.city) + '</span>' + act(s.status, 'жильё') + '</div><span class="stay-dates">' + esc(s.dates) + ' · ' + s.nights + ' ' + plural(s.nights, 'ночь', 'ночи', 'ночей') + '</span><p>' + esc(s.what) + '</p>' + (s.key ? keyTiles(s.key) : '') + addrBtn(stayDrive(s.drive), 'btn stay-addr') + ticketBtns(s) + stayMsg(s) + '</div>').join('') + '</div></div>' + ((state.checkins || []).length ? '<div class="block"><h2>Заселение и выезд</h2><p class="lead">Заселяют обычно с 14:00, выселяют до 12:00. Где поезд или самолёт не совпадает с этим — ниже, что можно сделать.</p>' + pastList('ci', state.checkins, c => c.date, cs => '<div class="ci-list">' + cs.map(c => '<div><p class="ci-note"><b>' + ddmm(c.date) + '</b> · ' + weekday(c.date) + '</p>' + ciCard(c) + '</div>').join('') + '</div>') + '</div>' : '') +
       state.forks.filter(f => STAY_FORKS.includes(f.id)).map(forkBlock).join(''),
-    days: () => '<div class="block"><h2>По дням</h2><p class="lead">Время местное. Часовые пояса: Тюмень UTC+5, Омск UTC+6, Казахстан UTC+5, Китай UTC+8.</p>' + calAct() + '<ol class="tl">' + state.timeline.map(e =>
-      '<li class="tl-row"><div class="tl-when"><b>' + ddmm(e.date) + '</b><span>' + weekday(e.date) + '</span>' + (e.time ? '<span class="mono">' + e.time + ' <small>' + esc(e.tz) + '</small></span>' : '') + '</div><div class="tl-body"><div class="tl-title kti">' + kico(e.kind || kindOf(e.title), 's') + '<span>' + esc(e.title) + '</span></div><p>' + esc(e.detail) + '</p></div><div class="tl-st">' + act(e.status === 'done' ? 'bought' : e.status, e.title, e.act) + '</div></li>').join('') + '</ol></div>',
+    days: () => '<div class="block"><h2>По дням</h2><p class="lead">Время местное. Часовые пояса: Тюмень UTC+5, Омск UTC+6, Казахстан UTC+5, Китай UTC+8.</p>' + calAct() + pastList('tl', state.timeline, e => e.date, es => '<ol class="tl">' + es.map(e =>
+      '<li class="tl-row"><div class="tl-when"><b>' + ddmm(e.date) + '</b><span>' + weekday(e.date) + '</span>' + (e.time ? '<span class="mono">' + e.time + ' <small>' + esc(e.tz) + '</small></span>' : '') + '</div><div class="tl-body"><div class="tl-title kti">' + kico(e.kind || kindOf(e.title), 's') + '<span>' + esc(e.title) + '</span></div><p>' + esc(e.detail) + '</p></div><div class="tl-st">' + act(e.status === 'done' ? 'bought' : e.status, e.title, e.act) + '</div></li>').join('') + '</ol>') + '</div>',
     choices: () => forksOf('travel').filter(f => !STAY_FORKS.includes(f.id)).map(forkBlock).join(''),
     rules: () => '<div class="block"><h2>Безвиз</h2><div class="board"><span class="lab">Въезд ' + ddmm(t.entry) + ' · выезд ' + ddmm(t.exit) + '</span><b style="font-size:1.25rem">' + stay + ' из ' + t.visaLimit + ' дней, запас ' + days(t.visaLimit - stay) + '</b>' + dayGrid(stay) + '<p>Граждане России въезжают в Китай без визы до 30 дней. Нужен только загранпаспорт. Режим действует до 31.12.2027.</p></div></div>' +
       importantBlock('travel', 'Важно в дороге')
@@ -1910,6 +1926,11 @@ const WDF = ['Воскресенье', 'Понедельник', 'Вторник
 const LAST_DAY = '2026-11-23';
 let daySel = null;
 function tripDays() { const out = []; for (let t = parseISO(state.trip.depart); t <= parseISO(LAST_DAY); t += DAY) out.push(isoOf(t)); return out; }
+const RUB_PER_CNY = 11;  // rough shop rate, the same ≈11 ₽/¥ the trip notes use
+let cnyIn = '';
+const rubOf = v => { const n = parseFloat(String(v).replace(/\s/g, '').replace(',', '.')); return n > 0 ? '≈ ' + Math.round(n * RUB_PER_CNY).toLocaleString('ru-RU') + ' ₽' : '≈ … ₽'; };
+const cnvBox = () => '<div class="cnv"><label class="cnv-row"><span>Цена в юанях</span><input class="cnv-in" type="text" inputmode="decimal" autocomplete="off" placeholder="¥" data-cny value="' + esc(cnyIn) + '"></label>' +
+  '<output class="cnv-out" aria-live="polite">' + rubOf(cnyIn) + '</output><small class="cnv-rate">В рублях по курсу ≈ ' + RUB_PER_CNY + ' ₽ за юань</small></div>';
 function defaultDay() { const t = isoOf(todayUTC()), D = tripDays(); return D.includes(t) ? t : D[0]; }
 function longDate(iso) { const dt = new Date(parseISO(iso)); return WDF[dt.getUTCDay()] + ', ' + dt.getUTCDate() + ' ' + MONTHS[dt.getUTCMonth()]; }
 const shortPlace = p => p.split('→').pop().trim().split(',')[0];
@@ -1961,7 +1982,7 @@ function dayView() {
     plan = ['<li><span class="tm none">—</span><div><div class="tt">' + esc(tt) + '</div><p>' + esc(pp) + '</p><div class="dp-foot"><span></span>' + pzEvent(tt, daySel, 'f') + '</div></div></li>'];
   }
   const H = state.health, quick = [];
-  if (daySel >= state.trip.entry && daySel <= state.trip.exit) quick.push('<button type="button" class="btn" data-copy="' + esc(state.leisure.food.cn) + '">' + I.copy + '<span>«Не остро» для кафе</span></button>');
+  if (daySel >= state.trip.entry && daySel <= state.trip.exit) quick.push(cnvBox(), '<button type="button" class="btn" data-copy="' + esc(state.leisure.food.cn) + '">' + I.copy + '<span>«Не остро» для кафе</span></button>');
   if (inChengdu(daySel) || daySel === '2026-10-26') quick.push('<button type="button" class="btn ghost" data-copy="' + esc(H.cards[0].cn) + '">' + I.copy + '<span>Карточка для врача</span></button>', '<button type="button" class="btn ghost" data-sub="health-cards">Все карточки на китайском</button>');
   dayDrive(daySel).forEach(it => quick.push(drvBtn(it)));
   quick.push('<button type="button" class="btn ghost" data-sub="docs-passports">Паспортные данные</button>');
@@ -2472,7 +2493,32 @@ function taskSub(t) {
   return m[t.id] || SECTIONS[t.zone][0][0];
 }
 function footer() { return '<footer class="foot"><p>Обновлено ' + ddmmyyyy(state.meta.updated) + '. Данные сверены по документам из папки проекта; что не подтверждено — помечено «Проверить» или «Выясняется».</p>' + (view !== 'home' ? '<p>' + esc(chipLabel()) + '</p>' : '') + '</footer>'; }
-function render() { if (sheet && !tkOf(sheet)) sheet = null; SHOW.clear(); app.innerHTML = VIEWS[view]() + footer() + (sheet ? sheetView() : '') + (ov ? (ov.k === 'sos' ? sosView() : showView(ov.it)) : '<button type="button" class="sos-fab" data-ov="sos">' + I.alert + '<span>Помощь</span></button>'); document.documentElement.classList.toggle('noscroll', !!(sheet || ov)); justStamped.clear(); if (view === 'day') { const c = document.querySelector('.dchip.on'); if (c) c.parentNode.scrollLeft = c.offsetLeft - c.parentNode.clientWidth / 2 + c.offsetWidth / 2; } if (view === 'map') initCanvas(); if (view === 'travel' && sub.travel === 'weather') initWeather(); if (view === 'health' && sub.health === 'prep') drawPrep(); if (view === 'home') pzCenterRoute(); pzPlay(); }
+function render() { if (sheet && !tkOf(sheet)) sheet = null; SHOW.clear(); app.innerHTML = VIEWS[view]() + footer() + (sheet ? sheetView() : '') + (ov ? (ov.k === 'sos' ? sosView() : showView(ov.it)) : fabs()); document.documentElement.classList.toggle('noscroll', !!(sheet || ov)); justStamped.clear(); if (view === 'day') { const c = document.querySelector('.dchip.on'); if (c) c.parentNode.scrollLeft = c.offsetLeft - c.parentNode.clientWidth / 2 + c.offsetWidth / 2; } if (view === 'map') initCanvas(); if (view === 'travel' && sub.travel === 'weather') initWeather(); if (view === 'health' && sub.health === 'prep') drawPrep(); if (view === 'home') pzCenterRoute(); pzPlay(); syncShow(); }
+function fabs() {
+  const h = nightDrive(isoOf(todayUTC()));  // tonight's hotel; none before the trip and on nights in a train or plane
+  return '<div class="fabs">' + (h ? '<button type="button" class="taxi-fab" data-show="' + showKey(h) + '">' + I.car + '<span>Такси домой</span></button>' : '') +
+    '<button type="button" class="sos-fab" data-ov="sos">' + I.alert + '<span>Помощь</span></button></div>';
+}
+/* while the big screen is up the phone must not dim in front of the driver; speech stops when it closes */
+let wake = null;
+function syncShow() {
+  const want = !!(ov && ov.k === 'show') && document.visibilityState === 'visible';
+  if (!(ov && ov.k === 'show') && window.speechSynthesis && speechSynthesis.speaking) speechSynthesis.cancel();
+  if (want && !wake && navigator.wakeLock) {
+    wake = navigator.wakeLock.request('screen').then(l => { if (!(ov && ov.k === 'show')) { l.release(); wake = null; return; } wake = l; l.addEventListener('release', () => { if (wake === l) wake = null; }); }, () => { wake = null; });
+  } else if (!want && wake && wake.release) { wake.release().catch(() => {}); wake = null; }
+}
+document.addEventListener('visibilitychange', syncShow);  // the system drops the lock when the app is hidden; take it again on return
+function speakZh(btn) {
+  const S = window.speechSynthesis, it = ov && ov.it; if (!S || !it || !it.cn) return;
+  const V = S.getVoices(), v = V.find(x => /^(zh|cmn)[-_](CN|Hans)/i.test(x.lang)) || V.find(x => /^(zh|cmn)/i.test(x.lang));
+  if (V.length && !v) { flash(btn, 'На телефоне нет китайского голоса'); return; }
+  S.cancel();
+  const u = new SpeechSynthesisUtterance(it.cn.replace(/\n+/g, '，')); u.lang = 'zh-CN'; u.rate = .8; if (v) u.voice = v;
+  u.onstart = () => btn.classList.add('on'); u.onend = () => btn.classList.remove('on');
+  u.onerror = e => { btn.classList.remove('on'); if (e.error !== 'canceled' && e.error !== 'interrupted') flash(btn, 'Не получилось озвучить'); };
+  S.speak(u);
+}
 const hashOf = () => view === 'day' ? 'day-' + (daySel || defaultDay()) : SECTIONS[view] ? view + '-' + sub[view] : view;
 function parseView(h) {
   const i = String(h || '').indexOf('-');
@@ -2485,7 +2531,7 @@ function parseView(h) {
 function initialView() {
   const v = parseView(location.hash.replace('#', '')); if (v) return v;
   try { const s = sessionStorage.getItem('trip-view'); if (s) { sessionStorage.removeItem('trip-view'); const w = parseView(s); if (w) return w; } } catch (e) {}
-  return 'home';
+  return tripDays().includes(isoOf(todayUTC())) ? 'day' : 'home';  // during the trip the first screen is today
 }
 let view = initialView();
 /* ---------- back: each move is a history step, so the phone's Back button returns where you were ---------- */
@@ -2573,7 +2619,8 @@ function showView(it) {
   return '<div class="show" role="dialog" aria-modal="true" aria-label="' + esc(it.title || it.ru || '') + '"><button type="button" class="sh-x" data-ovclose="1">' + I.prev + '<span>Назад</span></button><div class="sh-body">' + pre +
     (zh ? '<p class="sh-cn" lang="zh">' + esc(it.cn) + '</p>' + (it.say ? '<p class="sh-say">«' + esc(it.say) + '»</p>' : '') : '<p class="sh-ru">' + esc(it.ru) + '</p>') +
     (it.son ? '<div class="sh-nums">' + (state.help.son.phones || []).map(x => '<a href="tel:' + esc(x.n) + '">' + esc(x.show) + '</a>').join('') + '</div>' : '') +
-    '<p class="sh-title">' + esc(phrase ? it.ru : it.title) + (it.note ? ' · ' + esc(it.note) : '') + '</p>' + (phrase || it.son || !(it.cn || it.ru) ? '' : addrBtn(it, 'sh-copy')) + '</div></div>';
+    '<p class="sh-title">' + esc(phrase ? it.ru : it.title) + (it.note ? ' · ' + esc(it.note) : '') + '</p>' +
+    '<div class="sh-acts">' + (zh && 'speechSynthesis' in window ? '<button type="button" class="sh-copy" data-speak="1">' + I.sound + '<span>Озвучить по-китайски</span></button>' : '') + (phrase || it.son || !(it.cn || it.ru) ? '' : addrBtn(it, 'sh-copy')) + '</div></div></div>';
 }
 function sosView() {
   const H = state.help, P = H.son.phones || [];
@@ -2878,12 +2925,13 @@ function copyText(text, btn) {
 
 /* ---------- events ---------- */
 app.addEventListener('click', e => {
-  const t = e.target.closest('[data-back],[data-ov],[data-ovclose],[data-show],[data-go],[data-sub],[data-eat],[data-cv],[data-cvsel],[data-day],[data-prep],[data-prepset],[data-copy],[data-toggle],[data-choose],[data-train],[data-del],[data-tk],[data-tkclose],[data-tksave],[data-tkopen],[data-cal],[data-pz]');
+  const t = e.target.closest('[data-back],[data-ov],[data-ovclose],[data-show],[data-speak],[data-go],[data-sub],[data-eat],[data-cv],[data-cvsel],[data-day],[data-prep],[data-prepset],[data-copy],[data-toggle],[data-choose],[data-train],[data-del],[data-tk],[data-tkclose],[data-tksave],[data-tkopen],[data-cal],[data-pz]');
   if (!t || !app.contains(t)) return;
   if (t.dataset.back) { history.back(); return; }
   if (t.dataset.ov) { openOv({k: t.dataset.ov}); return; }
   if (t.dataset.ovclose) { closeOv(); return; }
   if (t.dataset.show) { const it = SHOW.get(t.dataset.show); if (it) openOv({k: 'show', it}); return; }
+  if (t.dataset.speak) { speakZh(t); return; }
   if (ov && t.dataset.sub) ov = null;
   if (t.dataset.pz !== undefined) { pzReplay(t); return; }
   if (t.dataset.eat) { eatCity = t.dataset.eat; if (!t.dataset.sub) { const y = window.scrollY; render(); window.scrollTo(0, y); return; } }
@@ -2905,6 +2953,10 @@ app.addEventListener('click', e => {
   else if (t.dataset.train !== undefined) chooseTrain(t.dataset.train);
   else if (t.dataset.del !== undefined) delLog(Number(t.dataset.del));
   else if (t.dataset.prepset) { const [id, v] = t.dataset.prepset.split(':'); const x = state.health.prep.find(q => q.id === id); if (x) { x.status = x.status === v ? null : v; commit(); } }
+});
+app.addEventListener('input', e => {
+  if (!e.target.matches('[data-cny]')) return;
+  cnyIn = e.target.value; const o = e.target.closest('.cnv').querySelector('.cnv-out'); if (o) o.textContent = rubOf(cnyIn);
 });
 app.addEventListener('change', e => {
   const c = e.target.closest('[data-pack]');
