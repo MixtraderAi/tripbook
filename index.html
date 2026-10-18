@@ -449,6 +449,11 @@ html.noscroll{overflow:hidden}
 .wv-acts .btn svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .wv-bar .ts-x{order:3}
 .wv-fr{flex:1;width:100%;min-height:0;border:0;background:var(--paper)}
+.hw-acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.hw-acts .btn{min-height:44px}
+.hw-acts .btn svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hw-fr{display:block;width:100%;border:0;border-radius:12px;background:var(--paper)}
+@media (max-width:640px){.hw-acts .btn{flex:1 1 calc(50% - 4px);justify-content:center}.hw-fr{width:calc(100% + 32px);margin-inline:-16px;border-radius:0}}
 @media (max-width:640px){.wv-acts{order:4;flex:1 1 100%}.wv-acts .btn{flex:1 1 0;justify-content:center}.wv-bar .ts-x{order:2}}
 @media (max-width:640px){.tsheet{left:0;right:0;top:auto;bottom:0;transform:none;width:auto;max-height:94dvh;border-radius:16px 16px 0 0;border-bottom:0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}}
 @media (max-width:640px){.tk-route{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tk-pz{grid-column:1/-1;grid-row:2;justify-self:center;width:min(170px,60%)}.ticket{grid-template-columns:1fr}.tk-stub{border-left:0;border-top:2px dashed var(--rule)}.tk-stub::before{left:-10px;top:-10px;clip-path:inset(0 0 0 50%)}.tk-stub::after{left:auto;right:-10px;top:-10px;bottom:auto;clip-path:inset(0 50% 0 0)}.tk-code{font-size:1.6rem}}
@@ -1511,7 +1516,7 @@ function health() {
   const H = state.health;
   const ecg = '<svg class="ecg" viewBox="0 0 600 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 24h180l10-14 12 26 10-30 12 18h120l8-10 10 20 8-10h230"/></svg>';
   return zonePage('health', ecg, {
-    summary: () => drCard() + taskBlock('health') + importantBlock('health'),
+    summary: () => (FILES.healthWeb ? healthWebBlock() : drCard()) + taskBlock('health') + importantBlock('health'),
     prep: prepSection,
     meds: medsSection,
     clinics: () => forksOf('health').map(forkBlock).join('') + tyumenPlan(),
@@ -1577,20 +1582,39 @@ function openSheet(id) {
   const x = document.querySelector('.tsheet .ts-x'); if (x) x.focus({preventScroll: true});
 }
 function closeSheet() { closeLayer(); }
-/* web health summary (FILES.healthWeb, tools/build.py): full screen in a sandboxed frame; its PDFs (docs with a health-summary file) save from the bar */
+/* web health summary (FILES.healthWeb, tools/build.py, sandboxed frame): it IS the «Сводка для врача» tab, grown to its full height,
+   and opens full screen from «Помощь». The frame posts its height and language; a re-render keeps both. Its PDFs save from the bar. */
 const WV_LANG = {ZH: 'PDF 中文', RU: 'PDF по-русски', EN: 'PDF English'};
+let hwHtml = '', hwH = 0, hwLang = '';
+const hwPdfs = () => canSave() ? state.docs.filter(d => d.blob && FILES[d.blob] && /health-summary_(\w+)\.pdf$/.test(d.file || ''))
+  .map(d => '<button type="button" class="btn ghost" data-tksave="' + d.blob + '">' + I.down + '<span>' + WV_LANG[/_(\w+)\.pdf$/.exec(d.file)[1]] + '</span></button>').join('') : '';
+const HW_TITLE = 'Сводка здоровья мамы: русский, English, 中文';
+function healthWebBlock() {
+  const H = state.health;
+  return '<section class="block hw" aria-label="Сводка здоровья мамы"><div class="hw-acts">' + hwPdfs() +
+      '<button type="button" class="btn ghost" data-copy="' + esc(H.cards[0].cn) + '">' + I.copy + '<span>Скопировать карточку по-китайски</span></button>' +
+      '<button type="button" class="btn ghost" data-ov="web">' + I.open + '<span>Во весь экран</span></button></div>' +
+    '<iframe class="hw-fr" title="' + HW_TITLE + '" sandbox="allow-scripts" style="height:' + (hwH || 2400) + 'px"></iframe></section>';
+}
 function webView() {
-  const pdfs = canSave() ? state.docs.filter(d => d.blob && FILES[d.blob] && /health-summary_(\w+)\.pdf$/.test(d.file || '')) : [];
+  const pdfs = hwPdfs();
   return '<div class="webv zone-health" role="dialog" aria-modal="true" aria-labelledby="wv-title"><div class="wv-bar"><h2 id="wv-title">Сводка здоровья мамы</h2>' +
-    (pdfs.length ? '<div class="wv-acts">' + pdfs.map(d => '<button type="button" class="btn ghost" data-tksave="' + d.blob + '">' + I.down + '<span>' + WV_LANG[/_(\w+)\.pdf$/.exec(d.file)[1]] + '</span></button>').join('') + '</div>' : '') +
+    (pdfs ? '<div class="wv-acts">' + pdfs + '</div>' : '') +
     '<button type="button" class="ts-x" data-ovclose="1">' + I.close + '<span>Закрыть</span></button></div>' +
-    '<iframe class="wv-fr" title="Сводка здоровья мамы: русский, English, 中文" sandbox="allow-scripts"></iframe></div>';
+    '<iframe class="wv-fr" title="' + HW_TITLE + '" sandbox="allow-scripts"></iframe></div>';
 }
 function initWeb() {
-  const fr = app.querySelector('.wv-fr'), f = FILES.healthWeb; if (!fr || !f) return;
-  const bin = atob(f.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-  fr.srcdoc = new TextDecoder('utf-8').decode(u);
+  const f = FILES.healthWeb; if (!f) return;
+  if (!hwHtml) { const bin = atob(f.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); hwHtml = new TextDecoder('utf-8').decode(u); }
+  const doc = hwLang ? hwHtml.replace('<body>', '<body><script>window.HC_LANG=' + JSON.stringify(hwLang) + '<\/script>') : hwHtml;
+  app.querySelectorAll('.hw-fr,.wv-fr').forEach(fr => { fr.srcdoc = doc; });
 }
+window.addEventListener('message', e => {
+  const d = e.data; if (!d || d.hw !== 1) return;
+  const fr = [...app.querySelectorAll('.hw-fr,.wv-fr')].find(x => x.contentWindow === e.source); if (!fr) return;
+  if (d.lang) hwLang = d.lang;
+  if (fr.classList.contains('hw-fr') && d.h > 0) { hwH = Math.ceil(d.h); fr.style.height = hwH + 'px'; }
+});
 function fileBlob(f) { const bin = atob(f.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], {type: f.mime}); }
 async function saveTicket(id, btn) {
   const f = FILES[id]; if (!f) return;
@@ -2569,7 +2593,7 @@ function taskSub(t) {
   return m[t.id] || SECTIONS[t.zone][0][0];
 }
 function footer() { return '<footer class="foot"><p>Обновлено ' + ddmmyyyy(state.meta.updated) + '. Данные сверены по документам из папки проекта; что не подтверждено — помечено «Проверить» или «Выясняется».</p>' + (view !== 'home' ? '<p>' + esc(chipLabel()) + '</p>' : '') + '</footer>'; }
-function render() { if (sheet && !tkOf(sheet)) sheet = null; SHOW.clear(); app.innerHTML = VIEWS[view]() + footer() + (sheet ? sheetView() : '') + (ov ? (ov.k === 'sos' ? sosView() : ov.k === 'web' ? webView() : showView(ov.it)) : fabs()); document.documentElement.classList.toggle('noscroll', !!(sheet || ov)); if (ov && ov.k === 'web') initWeb(); justStamped.clear(); if (view === 'day') { const c = document.querySelector('.dchip.on'); if (c) c.parentNode.scrollLeft = c.offsetLeft - c.parentNode.clientWidth / 2 + c.offsetWidth / 2; } if (view === 'map') initCanvas(); if (view === 'travel' && sub.travel === 'weather') initWeather(); if (view === 'health' && sub.health === 'prep') drawPrep(); if (view === 'home') pzCenterRoute(); pzPlay(); syncShow(); }
+function render() { if (sheet && !tkOf(sheet)) sheet = null; SHOW.clear(); app.innerHTML = VIEWS[view]() + footer() + (sheet ? sheetView() : '') + (ov ? (ov.k === 'sos' ? sosView() : ov.k === 'web' ? webView() : showView(ov.it)) : fabs()); document.documentElement.classList.toggle('noscroll', !!(sheet || ov)); initWeb(); justStamped.clear(); if (view === 'day') { const c = document.querySelector('.dchip.on'); if (c) c.parentNode.scrollLeft = c.offsetLeft - c.parentNode.clientWidth / 2 + c.offsetWidth / 2; } if (view === 'map') initCanvas(); if (view === 'travel' && sub.travel === 'weather') initWeather(); if (view === 'health' && sub.health === 'prep') drawPrep(); if (view === 'home') pzCenterRoute(); pzPlay(); syncShow(); }
 function fabs() {
   const h = nightDrive(isoOf(todayUTC()));  // tonight's hotel; none before the trip and on nights in a train or plane
   return '<div class="fabs">' + (h ? '<button type="button" class="taxi-fab" data-show="' + showKey(h) + '">' + I.car + '<span>Такси домой</span></button>' : '') +
@@ -2717,7 +2741,7 @@ function sosView() {
     '<div class="sos-nums">' + H.numbers.map(x => '<a class="sos-num" href="tel:' + x.n + '"><b>' + x.n + '</b><span>' + esc(x.t) + '</span><small>' + esc(x.where) + '</small></a>').join('') + '</div>' +
     '<section class="sos-sec"><h3>Сказать или показать</h3><div class="sos-list">' + H.phrases.map(x => '<button type="button" class="sos-ph" data-show="' + showKey(Object.assign({kind: 'phrase'}, x)) + '"><span class="cjk" lang="zh">' + esc(x.cn) + '</span><b>«' + esc(x.say) + '»</b><small>' + esc(x.ru) + ' · нажмите, чтобы показать крупно</small></button>').join('') + '</div></section>' +
     '<section class="sos-sec"><h3>Адреса для такси</h3><div class="sos-list">' + state.drive.map(x => x.pending ? '<p class="ts-none">' + esc(x.title) + ': ' + esc(x.pending.toLowerCase()) + '</p>' : drvBtn(x, x.title)).join('') + '</div></section>' +
-    '<section class="sos-sec"><h3>Для врача и страховой</h3><div class="sos-list"><button type="button" class="btn ghost" data-sub="health-cards">Карточки для врача на китайском</button>' +
+    '<section class="sos-sec"><h3>Для врача и страховой</h3><div class="sos-list">' + (FILES.healthWeb ? '<button type="button" class="btn ghost" data-ov="web">Сводка здоровья мамы · RU EN 中文</button>' : '') + '<button type="button" class="btn ghost" data-sub="health-cards">Карточки для врача на китайском</button>' +
     '</div></section>' + insBlock(H.insurance) + '</div>';
 }
 function insBlock(N) {
