@@ -440,6 +440,16 @@ html.noscroll{overflow:hidden}
 .ts-acts{display:flex;flex-wrap:wrap;gap:8px}
 .ts-acts .btn{flex:1 1 200px;justify-content:center;min-height:50px;font-size:1rem}
 .ts-hint{margin:0;font-size:.84rem;color:var(--ink-3)}
+/* web health summary: the whole page full screen in a frame, PDFs to save in its bar */
+.webv{position:fixed;inset:0;z-index:41;display:flex;flex-direction:column;background:var(--paper)}
+.wv-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--z-band);color:var(--z-band-ink)}
+.wv-bar h2{flex:1 1 12rem;margin:0;color:var(--z-band-ink);font-size:1.15rem}
+.wv-acts{display:flex;flex-wrap:wrap;gap:8px}
+.wv-acts .btn{min-height:44px}
+.wv-acts .btn svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.wv-bar .ts-x{order:3}
+.wv-fr{flex:1;width:100%;min-height:0;border:0;background:var(--paper)}
+@media (max-width:640px){.wv-acts{order:4;flex:1 1 100%}.wv-acts .btn{flex:1 1 0;justify-content:center}.wv-bar .ts-x{order:2}}
 @media (max-width:640px){.tsheet{left:0;right:0;top:auto;bottom:0;transform:none;width:auto;max-height:94dvh;border-radius:16px 16px 0 0;border-bottom:0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}}
 @media (max-width:640px){.tk-route{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tk-pz{grid-column:1/-1;grid-row:2;justify-self:center;width:min(170px,60%)}.ticket{grid-template-columns:1fr}.tk-stub{border-left:0;border-top:2px dashed var(--rule)}.tk-stub::before{left:-10px;top:-10px;clip-path:inset(0 0 0 50%)}.tk-stub::after{left:auto;right:-10px;top:-10px;bottom:auto;clip-path:inset(0 50% 0 0)}.tk-code{font-size:1.6rem}}
 .tp{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--rule)}
@@ -1479,7 +1489,7 @@ function drCard() {
       '<div class="dr-sec"><span class="lab">Нельзя и осторожно</span><ul class="warns">' + H.avoid.map(a => '<li class="w-high">' + I.alert + '<span>' + esc(a) + '</span></li>').join('') + '</ul></div>' +
       '<div class="dr-sec"><span class="lab">Принимает</span><div class="pills">' + momMeds.map(m => '<span class="pill">' + esc(m.brand) + '</span>').join('') + '</div></div>' +
     '</div></div>' +
-    '<div class="dr-foot"><button type="button" class="btn" data-copy="' + esc(H.cards[0].cn) + '">' + I.copy + '<span>Скопировать карточку для врача по-китайски</span></button>' + medFiles().map(m => '<button type="button" class="btn ghost" data-tk="' + m.files[0].id + '">' + I.file + '<span>' + esc(m.title) + '</span></button>').join('') + '<button type="button" class="btn ghost" data-sub="health-cards">Все карточки</button></div>' +
+    '<div class="dr-foot">' + (FILES.healthWeb ? '<button type="button" class="btn" data-ov="web">' + I.open + '<span>Открыть сводку здоровья · RU EN 中文</span></button>' : '') + '<button type="button" class="btn" data-copy="' + esc(H.cards[0].cn) + '">' + I.copy + '<span>Скопировать карточку для врача по-китайски</span></button>' + medFiles().map(m => '<button type="button" class="btn ghost" data-tk="' + m.files[0].id + '">' + I.file + '<span>' + esc(m.title) + '</span></button>').join('') + '<button type="button" class="btn ghost" data-sub="health-cards">Все карточки</button></div>' +
   '</div></section>';
 }
 function medsSection() {
@@ -1567,6 +1577,20 @@ function openSheet(id) {
   const x = document.querySelector('.tsheet .ts-x'); if (x) x.focus({preventScroll: true});
 }
 function closeSheet() { closeLayer(); }
+/* web health summary (FILES.healthWeb, tools/build.py): full screen in a sandboxed frame; its PDFs (docs with a health-summary file) save from the bar */
+const WV_LANG = {ZH: 'PDF 中文', RU: 'PDF по-русски', EN: 'PDF English'};
+function webView() {
+  const pdfs = canSave() ? state.docs.filter(d => d.blob && FILES[d.blob] && /health-summary_(\w+)\.pdf$/.test(d.file || '')) : [];
+  return '<div class="webv zone-health" role="dialog" aria-modal="true" aria-labelledby="wv-title"><div class="wv-bar"><h2 id="wv-title">Сводка здоровья мамы</h2>' +
+    (pdfs.length ? '<div class="wv-acts">' + pdfs.map(d => '<button type="button" class="btn ghost" data-tksave="' + d.blob + '">' + I.down + '<span>' + WV_LANG[/_(\w+)\.pdf$/.exec(d.file)[1]] + '</span></button>').join('') + '</div>' : '') +
+    '<button type="button" class="ts-x" data-ovclose="1">' + I.close + '<span>Закрыть</span></button></div>' +
+    '<iframe class="wv-fr" title="Сводка здоровья мамы: русский, English, 中文" sandbox="allow-scripts"></iframe></div>';
+}
+function initWeb() {
+  const fr = app.querySelector('.wv-fr'), f = FILES.healthWeb; if (!fr || !f) return;
+  const bin = atob(f.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  fr.srcdoc = new TextDecoder('utf-8').decode(u);
+}
 function fileBlob(f) { const bin = atob(f.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], {type: f.mime}); }
 async function saveTicket(id, btn) {
   const f = FILES[id]; if (!f) return;
@@ -2545,7 +2569,7 @@ function taskSub(t) {
   return m[t.id] || SECTIONS[t.zone][0][0];
 }
 function footer() { return '<footer class="foot"><p>Обновлено ' + ddmmyyyy(state.meta.updated) + '. Данные сверены по документам из папки проекта; что не подтверждено — помечено «Проверить» или «Выясняется».</p>' + (view !== 'home' ? '<p>' + esc(chipLabel()) + '</p>' : '') + '</footer>'; }
-function render() { if (sheet && !tkOf(sheet)) sheet = null; SHOW.clear(); app.innerHTML = VIEWS[view]() + footer() + (sheet ? sheetView() : '') + (ov ? (ov.k === 'sos' ? sosView() : showView(ov.it)) : fabs()); document.documentElement.classList.toggle('noscroll', !!(sheet || ov)); justStamped.clear(); if (view === 'day') { const c = document.querySelector('.dchip.on'); if (c) c.parentNode.scrollLeft = c.offsetLeft - c.parentNode.clientWidth / 2 + c.offsetWidth / 2; } if (view === 'map') initCanvas(); if (view === 'travel' && sub.travel === 'weather') initWeather(); if (view === 'health' && sub.health === 'prep') drawPrep(); if (view === 'home') pzCenterRoute(); pzPlay(); syncShow(); }
+function render() { if (sheet && !tkOf(sheet)) sheet = null; SHOW.clear(); app.innerHTML = VIEWS[view]() + footer() + (sheet ? sheetView() : '') + (ov ? (ov.k === 'sos' ? sosView() : ov.k === 'web' ? webView() : showView(ov.it)) : fabs()); document.documentElement.classList.toggle('noscroll', !!(sheet || ov)); if (ov && ov.k === 'web') initWeb(); justStamped.clear(); if (view === 'day') { const c = document.querySelector('.dchip.on'); if (c) c.parentNode.scrollLeft = c.offsetLeft - c.parentNode.clientWidth / 2 + c.offsetWidth / 2; } if (view === 'map') initCanvas(); if (view === 'travel' && sub.travel === 'weather') initWeather(); if (view === 'health' && sub.health === 'prep') drawPrep(); if (view === 'home') pzCenterRoute(); pzPlay(); syncShow(); }
 function fabs() {
   const h = nightDrive(isoOf(todayUTC()));  // tonight's hotel; none before the trip and on nights in a train or plane
   return '<div class="fabs">' + (h ? '<button type="button" class="taxi-fab" data-show="' + showKey(h) + '">' + I.car + '<span>Такси домой</span></button>' : '') +
@@ -2706,7 +2730,7 @@ function insBlock(N) {
     '<details class="ins-lim"><summary>Что оплачивает страховка</summary><ul>' + N.limits.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul><p class="ts-hint">' + esc(N.valid) + '</p></details>' +
     '</div></section>';
 }
-function openOv(o) { const y = window.scrollY; pushLayer(); sheet = null; ov = o; render(); window.scrollTo(0, y); const x = document.querySelector('.sh-x, .sos .ts-x'); if (x) x.focus({preventScroll: true}); }
+function openOv(o) { const y = window.scrollY; pushLayer(); sheet = null; ov = o; render(); window.scrollTo(0, y); const x = document.querySelector('.sh-x, .sos .ts-x, .webv .ts-x'); if (x) x.focus({preventScroll: true}); }
 function closeOv() { closeLayer(); }
 /* help sheet, ticket sheet and the big screen stack: Back closes the top one and shows what was under it */
 const layers = [];
