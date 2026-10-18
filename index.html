@@ -220,12 +220,15 @@ button.zh-now:hover{background:color-mix(in srgb,var(--z-band-ink) 20%,transpare
 .sbtn{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:52px;padding:10px 14px;border:1.5px solid color-mix(in srgb,var(--z) 35%,var(--rule));background:var(--sheet);color:var(--ink);font:600 1rem/1.25 var(--font-ui);text-align:left;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
 .sbtn:hover{border-color:var(--z)}
 .sbtn.on{background:var(--z-wash);border-color:var(--z);color:var(--z-strong);box-shadow:inset 0 -3px 0 var(--z)}
+.sbtn .sl{display:flex;align-items:center;gap:10px;min-width:0}
+.sbtn .sl svg{width:24px;height:24px;color:var(--z);stroke-width:1.7}
+.sbtn.on .sl svg{color:var(--z-strong)}
 .sbtn .n{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;padding:0 .4em;border-radius:999px;background:var(--z-band);color:var(--z-band-ink);font:600 .76rem var(--font-data)}
 .zone-health .sbtn{border-radius:12px}
 .zone-travel .sbtn{border-radius:8px}
 .zone-leisure .sbtn{border-radius:6px}
 .zone-docs .sbtn{border-radius:2px}
-@media (max-width:420px){.subnav{grid-template-columns:1fr 1fr}.sbtn{font-size:.95rem;padding:9px 11px}}
+@media (max-width:420px){.subnav{grid-template-columns:1fr 1fr}.sbtn{font-size:.95rem;padding:9px 11px}.sbtn .sl{gap:8px}.sbtn .sl svg{width:21px;height:21px}}
 
 /* tasks list (per zone) */
 .tasks{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-soft)}
@@ -1219,7 +1222,14 @@ const I = {
   sound:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
   car:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16v-4l2-5h12l2 5v4z"/><path d="M4 12h16"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></svg>',
   pin:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
-  bowl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20.5h8"/><path d="M14.5 3.5l6 6M12 4l3.5 7.5"/></svg>'
+  bowl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20.5h8"/><path d="M14.5 3.5l6 6M12 4l3.5 7.5"/></svg>',
+  cake:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 20.5h15v-6.5a2 2 0 0 0-2-2h-11a2 2 0 0 0-2 2z"/><path d="M4.5 16c1.25 1.1 2.5 1.1 3.75 0s2.5-1.1 3.75 0 2.5 1.1 3.75 0 2.5-1.1 3.75 0"/><path d="M12 12V8.6"/><path d="M12 3.4c-1 1.2-1.3 2.2 0 3.2 1.3-1 1-2-0-3.2z"/></svg>',
+  crowd:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="16.6" cy="9" r="2.4"/><path d="M16 14.1a4.6 4.6 0 0 1 4.6 5.4"/></svg>',
+  gate:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5c3.2-.6 6.4-2.6 9.5-5.5 3.1 2.9 6.3 4.9 9.5 5.5"/><path d="M6 9.4v4.1M18 9.4v4.1"/><path d="M3.5 13.5h17"/><path d="M4.5 13.5v7h15v-7"/><path d="M9.8 20.5v-3.3a2.2 2.2 0 0 1 4.4 0v3.3"/></svg>',
+  panda:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6.4" cy="6.6" r="2.4" fill="currentColor"/><circle cx="17.6" cy="6.6" r="2.4" fill="currentColor"/><circle cx="12" cy="13" r="7.2"/><ellipse cx="9.1" cy="12.4" rx="1.5" ry="2.1" transform="rotate(35 9.1 12.4)" fill="currentColor" stroke="none"/><ellipse cx="14.9" cy="12.4" rx="1.5" ry="2.1" transform="rotate(-35 14.9 12.4)" fill="currentColor" stroke="none"/><path d="M11 16.2h2l-1 .9z" fill="currentColor"/></svg>',
+  peaks:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 19.5l6.2-10.5 4.1 6.4 2.6-3.6 6.1 7.7z"/><path d="M6.4 12.9l2.3 1.5 1.8-1.7"/><circle cx="17.6" cy="5.8" r="2.1"/></svg>',
+  talk:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10.5h-9l-4.5 4v-4H4z"/><path d="M8 9h8M8 12h5"/></svg>',
+  check:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 12.4l2.8 2.8 5.4-5.9"/></svg>'
 };
 const ST = {
   done:{t:'Готово',c:'done'}, bought:{t:'Куплено',c:'done'}, verified:{t:'Сверено',c:'done'},
@@ -1469,7 +1479,7 @@ function drCard() {
       '<div class="dr-sec"><span class="lab">Нельзя и осторожно</span><ul class="warns">' + H.avoid.map(a => '<li class="w-high">' + I.alert + '<span>' + esc(a) + '</span></li>').join('') + '</ul></div>' +
       '<div class="dr-sec"><span class="lab">Принимает</span><div class="pills">' + momMeds.map(m => '<span class="pill">' + esc(m.brand) + '</span>').join('') + '</div></div>' +
     '</div></div>' +
-    '<div class="dr-foot"><button type="button" class="btn" data-copy="' + esc(H.cards[0].cn) + '">' + I.copy + '<span>Скопировать карточку для врача по-китайски</span></button><button type="button" class="btn ghost" data-sub="health-cards">Все карточки</button></div>' +
+    '<div class="dr-foot"><button type="button" class="btn" data-copy="' + esc(H.cards[0].cn) + '">' + I.copy + '<span>Скопировать карточку для врача по-китайски</span></button>' + medFiles().map(m => '<button type="button" class="btn ghost" data-tk="' + m.files[0].id + '">' + I.file + '<span>' + esc(m.title) + '</span></button>').join('') + '<button type="button" class="btn ghost" data-sub="health-cards">Все карточки</button></div>' +
   '</div></section>';
 }
 function medsSection() {
@@ -1485,7 +1495,7 @@ function tyumenPlan() {
 }
 function medDocsBlock() {
   const medDocs = state.docs.filter(d => d.group === 'Медицина');
-  return '<div class="block"><h2>Медицинские документы</h2><div class="rows">' + medDocs.map(d => '<div class="row"><div class="row-main"><div class="row-title">' + esc(d.title) + (d.date ? ' · ' + esc(d.date) : '') + '</div><p>' + esc(d.purpose) + '</p></div><div class="row-st">' + tag(d.status) + '</div></div>').join('') + '</div><button type="button" class="link" data-sub="docs-files">Все документы</button></div>';
+  return '<div class="block"><h2>Медицинские документы</h2><div class="rows">' + medDocs.map(d => '<div class="row"><div class="row-main"><div class="row-title">' + esc(d.title) + (d.date ? ' · ' + esc(d.date) : '') + '</div><p>' + esc(d.purpose) + '</p>' + (d.med && d.blob ? '<button type="button" class="mini" data-tk="' + d.blob + '">' + I.file + ' Открыть файл</button>' : '') + '</div><div class="row-st">' + tag(d.status) + '</div></div>').join('') + '</div><button type="button" class="link" data-sub="docs-files">Все документы</button></div>';
 }
 function health() {
   const H = state.health;
@@ -1528,28 +1538,29 @@ function ticketBtns(t) {
   return '<div class="tk-files">' + t.files.map(x => '<button type="button" class="btn ghost" data-tk="' + x.id + '">' + I.travel + '<span>' + (x.l ? esc(x.l) : t.city ? 'Бронь жилья' : x.who === 'both' ? 'Билет на обоих' : 'Билет ' + (x.who === 'T' ? 'мамы' : 'папы')) + '</span></button>').join('') + '</div>';
 }
 /* a file sheet opens for a ticket or for a stay booking (stays carry `city`) */
-const tkOf = id => state.tickets.concat(state.stays, state.help.insurance.files ? [state.help.insurance] : []).find(t => (t.files || []).some(x => x.id === id));
+const medFiles = () => state.docs.filter(d => d.med && d.blob).map(d => ({med: true, title: d.title, date: d.date, files: [{id: d.blob, who: d.who}]}));
+const tkOf = id => state.tickets.concat(state.stays, state.help.insurance.files ? [state.help.insurance] : [], medFiles()).find(t => (t.files || []).some(x => x.id === id));
 const canSave = () => !!downloadsNs || !hasViewer;
 function sheetView() {
   const t = tkOf(sheet); if (!t) return '';
   const f = FILES[sheet], who = t.files.find(x => x.id === sheet).who, doc = state.docs.find(d => d.blob === sheet);
-  const isPdf = f && f.mime === 'application/pdf', stay = !!t.city, ins = !!t.ins, what = ins ? 'полис' : stay ? 'бронь' : 'билет';
+  const isPdf = f && f.mime === 'application/pdf', stay = !!t.city, ins = !!t.ins, med = !!t.med, what = med ? 'файл' : ins ? 'полис' : stay ? 'бронь' : 'билет';
   const src = f ? (f.img ? 'data:image/jpeg;base64,' + f.img : 'data:' + f.mime + ';base64,' + f.data) : '';
-  const name = ins ? 'Страховой полис' : stay ? 'Жильё' : (t.kind === 'plane' ? 'Самолёт' : 'Поезд') + (t.num ? ' ' + t.num : '');
-  const route = ins ? t.company : stay ? t.city : t.from + ' → ' + t.to;
+  const name = med ? t.title : ins ? 'Страховой полис' : stay ? 'Жильё' : (t.kind === 'plane' ? 'Самолёт' : 'Поезд') + (t.num ? ' ' + t.num : '');
+  const route = med ? WHO[who] : ins ? t.company : stay ? t.city : t.from + ' → ' + t.to;
   const acts = [];
   if (f && canSave()) acts.push('<button type="button" class="btn" data-tksave="' + sheet + '">' + I.down + '<span>Скачать ' + what + (isPdf ? ' PDF' : '') + '</span></button>');
   if (f && !hasViewer) acts.push('<button type="button" class="btn ghost" data-tkopen="' + sheet + '">' + I.open + '<span>Открыть' + (isPdf ? ' PDF' : '') + '</span></button>');
-  return '<div class="ts-bg" data-tkclose="1"></div><div class="tsheet zone-travel" role="dialog" aria-modal="true" aria-labelledby="ts-title">' +
-    '<div class="ts-head"><div><span class="lab">' + (ins ? 'действует до ' + esc(t.until) : stay ? esc(t.dates) + ' · ' + t.nights + ' ' + plural(t.nights, 'ночь', 'ночи', 'ночей') : ddmm(t.date) + ' · ' + weekday(t.date) + ' · ' + esc(t.dep)) + '</span><h2 id="ts-title">' + esc(name) + ' · ' + esc(route) + '</h2></div>' +
+  return '<div class="ts-bg" data-tkclose="1"></div><div class="tsheet zone-' + (med ? 'health' : 'travel') + '" role="dialog" aria-modal="true" aria-labelledby="ts-title">' +
+    '<div class="ts-head"><div><span class="lab">' + (med ? esc(t.date || '') : ins ? 'действует до ' + esc(t.until) : stay ? esc(t.dates) + ' · ' + t.nights + ' ' + plural(t.nights, 'ночь', 'ночи', 'ночей') : ddmm(t.date) + ' · ' + weekday(t.date) + ' · ' + esc(t.dep)) + '</span><h2 id="ts-title">' + esc(name) + ' · ' + esc(route) + '</h2></div>' +
       '<button type="button" class="ts-x" data-tkclose="1">' + I.close + '<span>Закрыть</span></button></div>' +
     (t.files.length > 1 ? '<div class="ts-who" role="group" aria-label="Чей билет">' + t.files.map(x => '<button type="button" class="mini" data-tk="' + x.id + '" aria-pressed="' + (x.id === sheet) + '">' + WHO[x.who] + '</button>').join('') + '</div>' : '') +
     (stay ? (doc ? '<p class="ts-seat">' + esc(doc.purpose) + '</p>' : '') : who === 'both' ? (t.seats ? '<p class="ts-seat">' + esc(t.seats) + '</p>' : '') : doc ? '<p class="ts-seat">' + esc(WHO[who]) + ': ' + esc(doc.purpose) + '</p>' : '') +
-    (f ? '<img class="ts-img" src="' + src + '" alt="' + esc((ins ? 'Страховой полис' : stay ? 'Бронь: ' + t.city + ', ' + t.dates : 'Билет: ' + name + ', ' + t.from + ' → ' + t.to + ', ' + ddmm(t.date)) + ', ' + WHO[who].toLowerCase()) + '">'
+    (f ? '<img class="ts-img" src="' + src + '" alt="' + esc((med ? t.title : ins ? 'Страховой полис' : stay ? 'Бронь: ' + t.city + ', ' + t.dates : 'Билет: ' + name + ', ' + t.from + ' → ' + t.to + ', ' + ddmm(t.date)) + ', ' + WHO[who].toLowerCase()) + '">'
        : '<p class="ts-none">В этой копии страницы файла нет. Он есть в опубликованной версии и в локальной копии на компьютере.</p>') +
     (acts.length ? '<div class="ts-acts">' + acts.join('') + '</div>' : '') +
     (f && hasViewer && !downloadsNs ? '<p class="ts-hint">Чтобы сохранить ' + what + ' на телефон, нажмите на картинку и подержите.</p>' : '') +
-    '<p class="ts-hint">' + (ins ? 'Сначала звонок в ассистанс: ' + t.show + '. В больнице покажите паспорт и этот полис.' : stay ? 'При заселении покажите паспорта и эту бронь.' : 'На посадке билет не спрашивают — достаточно паспорта. Файл — на случай вопросов проводника.') + '</p></div>';
+    '<p class="ts-hint">' + (med ? 'Покажите врачу на экране: листайте вниз, здесь все листы.' : ins ? 'Сначала звонок в ассистанс: ' + t.show + '. В больнице покажите паспорт и этот полис.' : stay ? 'При заселении покажите паспорта и эту бронь.' : 'На посадке билет не спрашивают — достаточно паспорта. Файл — на случай вопросов проводника.') + '</p></div>';
 }
 function openSheet(id) {
   const y = window.scrollY; pushLayer(); ov = null; sheet = id; render(); window.scrollTo(0, y);
@@ -1913,7 +1924,7 @@ function docs() {
     wait: () => '<div class="block"><h2>Ожидаются</h2><p class="lead">Как появится — положите файл в папку <code>inbox</code> проекта или пришлите мне. Я разложу и сверю с паспортами.</p><div class="rows">' + state.expected.map(x => '<div class="row"><div class="row-main"><div class="row-title">' + esc(x.title) + '</div><p>' + esc(x.why || '') + '</p></div><div class="row-st">' + tag('missing') + '</div></div>').join('') + '</div></div>' + taskBlock('docs'),
     files: () => '<div class="block">' + groups.map(g => fold('files-' + g, esc(g) + ' <small>' + state.docs.filter(d => d.group === g).length + '</small>', '<div class="rows">' + state.docs.filter(d => d.group === g).map(d =>
       '<div class="row"><div class="row-main"><div class="row-title">' + esc(d.title) + '<span class="who">' + esc(WHO[d.who]) + '</span></div><p>' + esc(d.purpose) + '</p>' + (d.check ? '<p>' + esc(d.check) + '</p>' : '') +
-      '<p class="meta">' + (d.date ? '<span>' + esc(d.date) + '</span>' : '') + (d.valid ? '<span>' + esc(d.valid) + '</span>' : '') + fileLink(d.file) + '</p>' + (d.blob && tkOf(d.blob) ? '<button type="button" class="mini" data-tk="' + d.blob + '">' + I.travel + (tkOf(d.blob).ins ? ' Смотреть полис' : tkOf(d.blob).city ? ' Смотреть бронь' : ' Смотреть билет') + '</button>' : '') + '</div><div class="row-st">' + tag(d.status) + '</div></div>').join('') + '</div>', 'fold-group')).join('') + '</div>',
+      '<p class="meta">' + (d.date ? '<span>' + esc(d.date) + '</span>' : '') + (d.valid ? '<span>' + esc(d.valid) + '</span>' : '') + fileLink(d.file) + '</p>' + (d.blob && tkOf(d.blob) ? '<button type="button" class="mini" data-tk="' + d.blob + '">' + I.travel + (tkOf(d.blob).med ? ' Открыть файл' : tkOf(d.blob).ins ? ' Смотреть полис' : tkOf(d.blob).city ? ' Смотреть бронь' : ' Смотреть билет') + '</button>' : '') + '</div><div class="row-st">' + tag(d.status) + '</div></div>').join('') + '</div>', 'fold-group')).join('') + '</div>',
     check: () => '<div class="block"><h2>Сверка с паспортами</h2><p class="lead">Каждый документ сверяется с паспортом: фамилия и имя латиницей, номер паспорта, дата рождения.</p>' + recon() + '</div>'
   });
 }
@@ -2506,7 +2517,7 @@ const VIEWS = {home, day: dayView, health, travel, leisure, docs, map};
 const SECTIONS = {
   health: [['summary', 'Сводка для врача'], ['prep', 'Чего не хватает'], ['meds', 'Лекарства'], ['clinics', 'Где лечиться'], ['cards', 'Карточки на китайском'], ['log', 'Журнал и документы']],
   travel: [['main', 'Билеты'], ['weather', 'Погода и одежда'], ['stays', 'Жильё'], ['days', 'По дням'], ['choices', 'Решения'], ['rules', 'Безвиз и правила']],
-  leisure: [['plan', 'День рождения'], ['crowd', 'Когда толпы'], ['xian', 'Сиань'], ['chengdu', 'Чэнду'], ['food', 'Еда'], ['trips', 'За город'], ['far', 'Природа и чудеса'], ['phrases', 'Фразы'], ['todo', 'Что сделать']],
+  leisure: [['plan', 'День рождения', 'cake'], ['crowd', 'Когда толпы', 'crowd'], ['xian', 'Сиань', 'gate'], ['chengdu', 'Чэнду', 'panda'], ['food', 'Еда', 'bowl'], ['trips', 'За город', 'car'], ['far', 'Природа и чудеса', 'peaks'], ['phrases', 'Фразы', 'talk'], ['todo', 'Что сделать', 'check']],
   docs: [['passports', 'Паспорта'], ['wait', 'Ожидаются'], ['files', 'Все файлы'], ['check', 'Сверка']]
 };
 const STAY_FORKS = ['f7', 'f4'];
@@ -2521,8 +2532,8 @@ function subCount(z) {
 }
 function subnav(z) {
   const c = subCount(z);
-  return '<div class="subnav" role="tablist" aria-label="Разделы: ' + esc(ZONES[z].name) + '">' + SECTIONS[z].map(([id, l]) =>
-    '<button type="button" role="tab" class="sbtn' + (sub[z] === id ? ' on' : '') + '" aria-selected="' + (sub[z] === id) + '" data-sub="' + z + '-' + id + '"><span>' + esc(l) + '</span>' + (c[id] ? '<span class="n" aria-label="открыто: ' + c[id] + '">' + c[id] + '</span>' : '') + '</button>').join('') + '</div>';
+  return '<div class="subnav" role="tablist" aria-label="Разделы: ' + esc(ZONES[z].name) + '">' + SECTIONS[z].map(([id, l, ic]) =>
+    '<button type="button" role="tab" class="sbtn' + (sub[z] === id ? ' on' : '') + '" aria-selected="' + (sub[z] === id) + '" data-sub="' + z + '-' + id + '"><span class="sl">' + (ic ? I[ic] : '') + '<span>' + esc(l) + '</span></span>' + (c[id] ? '<span class="n" aria-label="открыто: ' + c[id] + '">' + c[id] + '</span>' : '') + '</button>').join('') + '</div>';
 }
 function zonePage(z, extra, parts) {
   const s = parts[sub[z]] ? sub[z] : SECTIONS[z][0][0];
