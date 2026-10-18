@@ -1566,6 +1566,8 @@ function sheetView() {
   const acts = [];
   if (f && canSave()) acts.push('<button type="button" class="btn" data-tksave="' + sheet + '">' + I.down + '<span>Скачать ' + what + (isPdf ? ' PDF' : '') + '</span></button>');
   if (f && !hasViewer) acts.push('<button type="button" class="btn ghost" data-tkopen="' + sheet + '">' + I.open + '<span>Открыть' + (isPdf ? ' PDF' : '') + '</span></button>');
+  const web = !!(doc && doc.web && FILES.healthWeb);
+  if (web) acts.push('<button type="button" class="btn ghost" data-ov="web">' + I.open + '<span>Открыть сводку целиком</span></button>');
   return '<div class="ts-bg" data-tkclose="1"></div><div class="tsheet zone-' + (med ? 'health' : 'travel') + '" role="dialog" aria-modal="true" aria-labelledby="ts-title">' +
     '<div class="ts-head"><div><span class="lab">' + (med ? esc(t.date || '') : ins ? 'действует до ' + esc(t.until) : stay ? esc(t.dates) + ' · ' + t.nights + ' ' + plural(t.nights, 'ночь', 'ночи', 'ночей') : ddmm(t.date) + ' · ' + weekday(t.date) + ' · ' + esc(t.dep)) + '</span><h2 id="ts-title">' + esc(name) + ' · ' + esc(route) + '</h2></div>' +
       '<button type="button" class="ts-x" data-tkclose="1">' + I.close + '<span>Закрыть</span></button></div>' +
@@ -1575,7 +1577,7 @@ function sheetView() {
        : '<p class="ts-none">В этой копии страницы файла нет. Он есть в опубликованной версии и в локальной копии на компьютере.</p>') +
     (acts.length ? '<div class="ts-acts">' + acts.join('') + '</div>' : '') +
     (f && hasViewer && !downloadsNs ? '<p class="ts-hint">Чтобы сохранить ' + what + ' на телефон, нажмите на картинку и подержите.</p>' : '') +
-    '<p class="ts-hint">' + (med ? 'Покажите врачу на экране: листайте вниз, здесь все листы.' : ins ? 'Сначала звонок в ассистанс: ' + t.show + '. В больнице покажите паспорт и этот полис.' : stay ? 'При заселении покажите паспорта и эту бронь.' : 'На посадке билет не спрашивают — достаточно паспорта. Файл — на случай вопросов проводника.') + '</p></div>';
+    '<p class="ts-hint">' + (web ? 'Здесь первый лист. Всю сводку врачу удобнее показать кнопкой «Открыть сводку целиком».' : med ? 'Покажите врачу на экране: листайте вниз, здесь все листы.' : ins ? 'Сначала звонок в ассистанс: ' + t.show + '. В больнице покажите паспорт и этот полис.' : stay ? 'При заселении покажите паспорта и эту бронь.' : 'На посадке билет не спрашивают — достаточно паспорта. Файл — на случай вопросов проводника.') + '</p></div>';
 }
 function openSheet(id) {
   const y = window.scrollY; pushLayer(); ov = null; sheet = id; render(); window.scrollTo(0, y);
