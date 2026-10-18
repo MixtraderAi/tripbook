@@ -1,6 +1,6 @@
 /* Offline shell for the trip app. tools/build_pwa.py fills the build id and the asset list.
    data.json / files.json and the weather go past the worker: boot.js keeps them in IndexedDB and localStorage. */
-const CACHE_NAME = 'china-trip-shell-b6d73a7e50';
+const CACHE_NAME = 'china-trip-shell-add4558945';
 const SHELL_ASSETS = ["./", "./index.html", "./boot.js", "./boot.css", "./manifest.json", "./icon-192.png", "./icon-512.png", "./fonts/fonts.css", "./fonts/GolosText-465785f8.woff2", "./fonts/GolosText-83cb19f9.woff2", "./fonts/JetBrainsMono-028edbf5.woff2", "./fonts/JetBrainsMono-0a7197f9.woff2", "./fonts/NotoSerif-928e6acd.woff2", "./fonts/NotoSerif-e22bf423.woff2"];
 
 self.addEventListener('install', event => {

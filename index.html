@@ -1560,7 +1560,7 @@ function sheetView() {
   const t = tkOf(sheet); if (!t) return '';
   const f = FILES[sheet], who = t.files.find(x => x.id === sheet).who, doc = state.docs.find(d => d.blob === sheet);
   const isPdf = f && f.mime === 'application/pdf', stay = !!t.city, ins = !!t.ins, med = !!t.med, what = med ? 'файл' : ins ? 'полис' : stay ? 'бронь' : 'билет';
-  const src = f ? (f.img ? 'data:image/jpeg;base64,' + f.img : 'data:' + f.mime + ';base64,' + f.data) : '';
+  const src = f ? (f.img ? 'data:image/webp;base64,' + f.img :'data:' + f.mime + ';base64,' + f.data) : '';
   const name = med ? t.title : ins ? 'Страховой полис' : stay ? 'Жильё' : (t.kind === 'plane' ? 'Самолёт' : 'Поезд') + (t.num ? ' ' + t.num : '');
   const route = med ? WHO[who] : ins ? t.company : stay ? t.city : t.from + ' → ' + t.to;
   const acts = [];
