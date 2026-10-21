@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 
-const CONFIG = /*CONFIG*/{"DATA_ENDPOINTS": ["./data.json", "https://tripbook-five.vercel.app/data.json", "https://mixtraderai.github.io/tripbook/data.json"], "FETCH_TIMEOUT_MS": 3500, "WEATHER_TIMEOUT_MS": 15000, "LINK_SECRET": null, "BUILD": "add4558945"}/*END*/;
+const CONFIG = /*CONFIG*/{"DATA_ENDPOINTS": ["./data.json", "https://tripbook-five.vercel.app/data.json", "https://mixtraderai.github.io/tripbook/data.json"], "FETCH_TIMEOUT_MS": 3500, "WEATHER_TIMEOUT_MS": 15000, "LINK_SECRET": null, "BUILD": "bb60824049"}/*END*/;
 const WX = /*WX*/{"cities": {"tyumen": [57.15, 65.53], "petro": [54.87, 69.15], "karaganda": [49.8, 73.1], "almaty": [43.24, 76.89], "xian": [34.34, 108.94], "chengdu": [30.66, 104.06]}, "models": {"ecmwf": "ecmwf_ifs025", "gfs": "gfs_seamless", "icon": "icon_seamless", "cma": "cma_grapes_global", "jma": "jma_seamless"}}/*END*/;
 
 const readJSON = id => { const el = document.getElementById(id); if (!el) return null; try { return JSON.parse(el.textContent); } catch (e) { return null; } };
@@ -103,7 +103,8 @@ async function fetchLatestEncryptedData() {
 async function fetchFiles(dataUrl, hash) {
   const urls = [dataUrl].concat(endpoints().filter(u => u !== dataUrl)).map(u => new URL('files.json', u).href);
   for (const u of urls) {
-    try { const p = await fetchWithTimeout(u, CONFIG.FETCH_TIMEOUT_MS * 4); if (p && p.cipher && p.hash === hash) return p; }
+    // the documents are ~12 MB: on slow roaming 14 s was not enough, so a mirror gets a minute
+    try { const p = await fetchWithTimeout(u, 60000); if (p && p.cipher && p.hash === hash) return p; }
     catch (e) { console.warn('Узел ' + u + ' недоступен, пробуем следующий...'); }
   }
   throw new Error('Файлы билетов не загрузились');
@@ -271,7 +272,9 @@ async function refresh(manual) {
     const {p, url} = await fetchLatestEncryptedData();
     ok = true;
     LS.set(K_CHECKED, String(Date.now()));
-    if (plain && pin && p.updatedAt > plain.updatedAt) {
+    // the same version with another files hash means the documents did not load last time: fetch them again;
+    // an older mirror never replaces the copy on the phone
+    if (plain && pin && (p.updatedAt > plain.updatedAt || (p.updatedAt === plain.updatedAt && p.filesHash !== plain.filesHash))) {
       try {
         const state = await CryptoEngine.decryptPayload(p, password(pin));
         let files = plain.files, enc = await dbGet('enc') || {};
@@ -351,7 +354,8 @@ async function unlock(pin) {
   const plain = {state, files, updatedAt: best.data.updatedAt, filesHash: ef ? best.data.filesHash : null};
   await dbPut({plain, enc: {data: best.data, files: ef || undefined}});
   startApp(plain);
-  if (net) status('ok', 'Данные актуальны (обновлено: ' + hhmm(Date.now()) + ')'); else offlineStatus();
+  if (net && !ef && best.data.filesHash) status('off', 'Документы не загрузились — нажмите, чтобы попробовать ещё раз', checkAction);
+  else if (net) status('ok', 'Данные актуальны (обновлено: ' + hhmm(Date.now()) + ')'); else offlineStatus();
   refreshWeather().then(n => { if (n) freshArrived(); }, () => {});
 }
 

@@ -1255,8 +1255,12 @@ const ST = {
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad = n => String(n).padStart(2, '0');
 const parseISO = s => { const [y,m,d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
-const todayUTC = () => { const n = new Date(); return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()); };
-const isoToday = () => { const n = new Date(); return n.getFullYear() + '-' + pad(n.getMonth() + 1) + '-' + pad(n.getDate()); };
+// The parents' local time, whatever the phone's zone (the son edits from Dubai): China UTC+8 between the two flights, UTC+5 otherwise
+const evTs = id => { const e = state.timeline.find(x => x.id === id); if (!e || !e.time) return NaN; const [y, mo, d] = e.date.split('-').map(Number), [h, mi] = e.time.split(':').map(Number), m = /UTC([+-]\d+)/.exec(e.tz || ''); return Date.UTC(y, mo - 1, d, h, mi) - (m ? Number(m[1]) : 5) * 3600e3; };
+const parentsOff = () => { const t = Date.now(); return t >= evTs('tl-flight-cz8062') && t < evTs('tl-flight-ca455') ? 8 : 5; };
+const parentsNow = () => new Date(Date.now() + parentsOff() * 3600e3);
+const todayUTC = () => { const n = parentsNow(); return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()); };
+const isoToday = () => { const n = parentsNow(); return n.getUTCFullYear() + '-' + pad(n.getUTCMonth() + 1) + '-' + pad(n.getUTCDate()); };
 const daysBetween = (a, b) => Math.round((b - a) / DAY);
 const ddmm = s => s ? s.slice(8, 10) + '.' + s.slice(5, 7) : '';
 const ddmmyyyy = s => s ? s.slice(8, 10) + '.' + s.slice(5, 7) + '.' + s.slice(0, 4) : '';
@@ -1485,10 +1489,12 @@ function logView() {
 function drCard() {
   const H = state.health, mom = state.persons.find(p => p.id === 'T');
   const age = ageAt(mom.dob, todayUTC());
+  const [bd, bm] = mom.dob.split('.'), bISO = state.trip.depart.slice(0, 4) + '-' + bm + '-' + bd;
+  const turns = todayUTC() < parseISO(bISO) ? ', ' + ddmm(bISO) + ' исполнится ' + (age + 1) : '';
   const momMeds = state.meds.filter(m => m.who === 'T');
   const nDocs = state.docs.filter(d => d.group === 'Медицина' && d.status === 'verified').length;
   return '<section class="block" aria-labelledby="h-dr"><h2 id="h-dr">Сводка для врача</h2><div class="dr">' +
-    '<div class="dr-head"><div class="dr-who"><b>Мама · ' + esc(mom.full) + '</b><span>' + age + ' ' + plural(age, 'год', 'года', 'лет') + ', 26.10 исполнится ' + (age + 1) + '. Лечение в Чэнду с 27.10.</span></div><span class="dr-src">' + I.file + 'Собрано Claude по ' + nDocs + ' документам</span></div>' +
+    '<div class="dr-head"><div class="dr-who"><b>Мама · ' + esc(mom.full) + '</b><span>' + age + ' ' + plural(age, 'год', 'года', 'лет') + turns + '. Лечение в Чэнду с 27.10.</span></div><span class="dr-src">' + I.file + 'Собрано Claude по ' + nDocs + ' документам</span></div>' +
     '<div class="dr-body"><div>' + spineSVG() + '</div><div>' +
       '<div class="dr-sec"><span class="lab">Что болит и почему</span><ul class="areas">' + H.areas.map(a => '<li><b>' + esc(a.area) + '</b><span>' + esc(a.plain) + '<small>' + esc(a.src) + '</small></span></li>').join('') + '</ul></div>' +
       '<div class="dr-sec"><span class="lab">Нельзя и осторожно</span><ul class="warns">' + H.avoid.map(a => '<li class="w-high">' + I.alert + '<span>' + esc(a) + '</span></li>').join('') + '</ul></div>' +
@@ -1682,7 +1688,7 @@ function syncTrain() {
   const p = state.trainPlan; if (!p) return;
   const o = p.options.find(x => x.num === trainChosen(p)) || null;
   const t = state.tickets.find(x => x.kind === 'train' && x.c1 === 'XIY');
-  const e = state.timeline.find(x => x.date === p.date && x.title.indexOf('Поезд Сиань') === 0);
+  const e = state.timeline.find(x => x.id === 'tl-train-xian-chengdu');
   if (t) { t.num = o ? o.num : ''; t.dep = o ? o.dep : ''; t.arr = o ? o.arr : ''; }
   if (e) e.time = o ? o.dep : '';
 }
@@ -2075,7 +2081,7 @@ function dayView() {
   }).join('');
   let plan = d.events.map((e, ei) => {
     const t = ticketFor(e);
-    return '<li><span class="tm' + (e.time ? '' : ' none') + '">' + (e.time ? e.time + '<small>' + esc(e.tz) + '</small>' : '—') + '</span><div><div class="tt kti">' + kico(e.kind || kindOf(e.title), 'l') + '<span>' + esc(e.title) + '</span></div><p>' + esc(e.detail) + '</p>' + (t && t.key ? (t.cls ? '<p class="cls">' + esc(t.cls) + '</p>' : '') + keyTiles(t.key) : t && t.seats ? '<p class="seat">' + esc((t.cls ? t.cls + ' · ' : '') + t.seats) + '</p>' : '') + ticketBtns(t) + (state.trainPlan && e.date === state.trainPlan.date && e.title.indexOf('Поезд Сиань') === 0 ? trainDay() : '') + '<div class="dp-foot"><div class="tags">' + act(e.status === 'done' ? 'bought' : e.status, e.title, e.act) + '</div>' + pzEvent(e.title, daySel, ei) + '</div></div></li>';
+    return '<li><span class="tm' + (e.time ? '' : ' none') + '">' + (e.time ? e.time + '<small>' + esc(e.tz) + '</small>' : '—') + '</span><div><div class="tt kti">' + kico(e.kind || kindOf(e.title), 'l') + '<span>' + esc(e.title) + '</span></div><p>' + esc(e.detail) + '</p>' + (t && t.key ? (t.cls ? '<p class="cls">' + esc(t.cls) + '</p>' : '') + keyTiles(t.key) : t && t.seats ? '<p class="seat">' + esc((t.cls ? t.cls + ' · ' : '') + t.seats) + '</p>' : '') + ticketBtns(t) + (state.trainPlan && e.id === 'tl-train-xian-chengdu' ? trainDay() : '') + '<div class="dp-foot"><div class="tags">' + act(e.status === 'done' ? 'bought' : e.status, e.title, e.act) + '</div>' + pzEvent(e.title, daySel, ei) + '</div></div></li>';
   }).concat(d.ms.map((m, mi) => '<li><span class="tm none">—</span><div><div class="tt">' + esc(m.title) + '</div><p>' + esc(m.sub) + '</p><div class="dp-foot"><span></span>' + pzEvent(m.title, daySel, 'm' + mi) + '</div></div></li>'));
   if (!plan.length) {
     const train = d.night && d.night.where.indexOf('В поезде') === 0;
@@ -2591,13 +2597,14 @@ function zonePage(z, extra, parts) {
   return '<div class="zone zone-' + z + '">' + topbar() + zhead(z, extra) + subnav(z) + '<div class="page" role="tabpanel" aria-label="' + esc(label) + '">' + parts[s]() + '</div></div>';
 }
 function taskSub(t) {
-  const m = {t11: 'meds', t14: 'clinics', t15: 'clinics', t12: 'log', t13: 'cards', t4: 'stays', t20: 'stays', t5: 'stays', t6: 'stays', t10: 'stays', t8: 'choices', t7: 'wait'};
+  const m = {t11: 'meds', t14: 'clinics', t15: 'clinics', t12: 'log', t13: 'cards', t4: 'stays', t20: 'stays', t5: 'stays', t6: 'stays', t10: 'stays', t8: 'choices', t7: 'wait',
+    t21: 'stays', t22: 'stays', t23: 'stays', t25: 'stays', t26: 'stays', t27: 'clinics', l1: 'xian', l3: 'xian'};
   return m[t.id] || SECTIONS[t.zone][0][0];
 }
 function footer() { return '<footer class="foot"><p>Обновлено ' + ddmmyyyy(state.meta.updated) + '. Данные сверены по документам из папки проекта; что не подтверждено — помечено «Проверить» или «Выясняется».</p>' + (view !== 'home' ? '<p>' + esc(chipLabel()) + '</p>' : '') + '</footer>'; }
 function render() { if (sheet && !tkOf(sheet)) sheet = null; SHOW.clear(); app.innerHTML = VIEWS[view]() + footer() + (sheet ? sheetView() : '') + (ov ? (ov.k === 'sos' ? sosView() : ov.k === 'web' ? webView() : showView(ov.it)) : fabs()); document.documentElement.classList.toggle('noscroll', !!(sheet || ov)); initWeb(); justStamped.clear(); if (view === 'day') { const c = document.querySelector('.dchip.on'); if (c) c.parentNode.scrollLeft = c.offsetLeft - c.parentNode.clientWidth / 2 + c.offsetWidth / 2; } if (view === 'map') initCanvas(); if (view === 'travel' && sub.travel === 'weather') initWeather(); if (view === 'health' && sub.health === 'prep') drawPrep(); if (view === 'home') pzCenterRoute(); pzPlay(); syncShow(); }
 function fabs() {
-  const h = nightDrive(isoOf(todayUTC()));  // tonight's hotel; none before the trip and on nights in a train or plane
+  const h = nightDrive(isoOf(todayUTC()), true);  // tonight's hotel; none before the trip and on nights in a train or plane
   return '<div class="fabs">' + (h ? '<button type="button" class="taxi-fab" data-show="' + showKey(h) + '">' + I.car + '<span>Такси домой</span></button>' : '') +
     '<button type="button" class="sos-fab" data-ov="sos">' + I.alert + '<span>Помощь</span></button></div>';
 }
@@ -2693,8 +2700,11 @@ function timedEvents() {
 function nowNext() {
   const now = Date.now(), T = timedEvents(), nx = T.find(x => x.ts > now), pv = T.filter(x => x.ts <= now).pop();
   if (!nx) return '';
-  const off = pv ? pv.off : 5, home = 5;
-  const cur = pv && now - pv.ts < 36 * 3600e3 ? '<div class="nn-row"><span class="lab">Сейчас</span><b class="kti">' + kico(pv.e.kind || kindOf(pv.e.title)) + '<span>' + esc(pv.e.title) + '</span></b><span class="nn-when">с ' + esc(pv.e.time) + ' <small>' + esc(pv.e.tz) + '</small></span></div>' : '';
+  const off = parentsOff(), home = 5, iso = isoOf(todayUTC());
+  // a timed event is "now" on its own day or within 12 h (a night flight); otherwise today's events without a time
+  const todays = state.timeline.filter(e => e.date === iso && !e.time);
+  const cur = pv && (pv.e.date === iso || now - pv.ts < 12 * 3600e3) ?'<div class="nn-row"><span class="lab">Сейчас</span><b class="kti">' + kico(pv.e.kind || kindOf(pv.e.title)) + '<span>' + esc(pv.e.title) + '</span></b><span class="nn-when">с ' + esc(pv.e.time) + ' <small>' + esc(pv.e.tz) + '</small></span></div>'
+    : todays.map(e => '<div class="nn-row"><span class="lab">Сегодня</span><b class="kti">' + kico(e.kind || kindOf(e.title)) + '<span>' + esc(e.title) + '</span></b></div>').join('');
   const clocks = off === home
     ? '<span>Время у родителей и в Тюмени: <b>' + clockAt(now, home) + '</b></span>'
     : '<span>У родителей: <b>' + clockAt(now, off) + '</b></span><span>В Тюмени: <b>' + clockAt(now, home) + '</b></span><span>Разница ' + (off - home > 0 ? '+' : '') + (off - home) + ' ч</span>';
@@ -2711,7 +2721,12 @@ const dayDrive = iso => state.drive.filter(x => x.from <= iso && iso <= x.to && 
 const addrOf = x => x.cn ? x.cn.split('\n').pop() : x.ru.split('\n')[0];
 const addrBtn = (x, cls) => x && !x.pending ? '<button type="button" class="' + (cls || 'btn ghost') + '" data-copy="' + esc(addrOf(x)) + '">' + I.copy + '<span>Скопировать адрес</span></button>' : '';
 const stayDrive = id => id && state.drive.find(x => x.id === id);
-const nightDrive = iso => { const ids = state.stays.map(s => s.drive).filter(Boolean); return state.drive.filter(x => ids.includes(x.id) && iso >= x.from && iso <= x.to).pop(); };
+// now: on a move day the old place stays "home" until the arrival time in the new city (checkins kind 'in')
+const nightDrive = (iso, now) => {
+  const ids = state.stays.map(s => s.drive).filter(Boolean), hs = state.drive.filter(x => ids.includes(x.id) && iso >= x.from && iso <= x.to);
+  const inn = now && hs.length > 1 && state.checkins.find(c => c.date === iso && c.kind === 'in' && c.at);
+  return inn && clockAt(Date.now(), parentsOff()) < inn.at ? hs[0] : hs.pop();
+};
 const drvBtn = (it, label) =>'<button type="button" class="btn ghost" data-show="' + showKey(it) + '">' + I.car + '<span>' + esc(label || 'Водителю: ' + it.title) + '</span></button>';
 function drvBlock() {
   return '<div class="block"><h2>Адреса для такси</h2><p class="lead">Нажмите — адрес откроется крупно на весь экран, телефон можно показать водителю.</p><div class="drv-list">' +
@@ -2735,16 +2750,16 @@ function sosView() {
   const H = state.help, P = H.son.phones || [];
   const son = P.length ? '<section class="sos-sec"><h3>Сын</h3><div class="sos-list">' + P.map(x => '<a class="btn sos-call" href="tel:' + esc(x.n) + '">' + I.phone + '<span>Позвонить · ' + esc(x.show) + ' <small>' + esc(x.where) + '</small></span></a>').join('') +
       '<div class="sos-apps">' + P.map(x => (x.wa ? '<a class="btn ghost" href="https://wa.me/' + esc(x.n.slice(1)) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') + (x.tg ? '<a class="btn ghost" href="https://t.me/' + esc(x.n) + '" target="_blank" rel="noopener">Telegram</a>' : '') +
-        (x.wechat ? '<span class="sos-wc">WeChat: <b>' + esc(x.show) + '</b></span>' : '')).join('') + '</div>' + (H.son.note ? '<p class="ts-hint">' + esc(H.son.note) + '</p>' : '') + '</div></section>'
+        (x.wechat ? '<button type="button" class="btn ghost" data-copy="' + esc(x.n) + '">' + I.copy + '<span>WeChat: ' + esc(x.show) + '</span></button>' : '')).join('') + '</div>' + (H.son.note ? '<p class="ts-hint">' + esc(H.son.note) + '</p>' : '') + '</div></section>'
     : '<p class="ts-none">Здесь будет кнопка «Позвонить сыну» — номер пока не добавлен.</p>';
   return '<div class="ts-bg" data-ovclose="1"></div><div class="tsheet sos zone-health" role="dialog" aria-modal="true" aria-labelledby="sos-h">' +
     '<div class="ts-head"><div><span class="lab">Помощь</span><h2 id="sos-h">Если что-то случилось</h2></div><button type="button" class="ts-x" data-ovclose="1">' + I.close + '<span>Закрыть</span></button></div>' +
     son +
-    '<div class="sos-nums">' + H.numbers.map(x => '<a class="sos-num" href="tel:' + x.n + '"><b>' + x.n + '</b><span>' + esc(x.t) + '</span><small>' + esc(x.where) + '</small></a>').join('') + '</div>' +
+    '<div class="sos-nums">' + H.numbers.map(x => '<a class="sos-num" href="tel:' + x.n + '"><b>' + x.n + '</b><span>' + esc(x.t) + '</span><small>' + esc(x.where) + '</small></a>').join('') + '</div>' + insBlock(H.insurance) +
     '<section class="sos-sec"><h3>Сказать или показать</h3><div class="sos-list">' + H.phrases.map(x => '<button type="button" class="sos-ph" data-show="' + showKey(Object.assign({kind: 'phrase'}, x)) + '"><span class="cjk" lang="zh">' + esc(x.cn) + '</span><b>«' + esc(x.say) + '»</b><small>' + esc(x.ru) + ' · нажмите, чтобы показать крупно</small></button>').join('') + '</div></section>' +
     '<section class="sos-sec"><h3>Адреса для такси</h3><div class="sos-list">' + state.drive.map(x => x.pending ? '<p class="ts-none">' + esc(x.title) + ': ' + esc(x.pending.toLowerCase()) + '</p>' : drvBtn(x, x.title)).join('') + '</div></section>' +
     '<section class="sos-sec"><h3>Для врача и страховой</h3><div class="sos-list">' + (FILES.healthWeb ? '<button type="button" class="btn ghost" data-ov="web">Сводка здоровья мамы · RU EN 中文</button>' : '') + '<button type="button" class="btn ghost" data-sub="health-cards">Карточки для врача на китайском</button>' +
-    '</div></section>' + insBlock(H.insurance) + '</div>';
+    '</div></section></div>';
 }
 function insBlock(N) {
   if (!N || !N.files) return '<section class="sos-sec"><h3>Страховка</h3><p class="ts-none">Номер страховки появится здесь, когда она будет оформлена.</p></section>';
