@@ -1559,7 +1559,8 @@ function ticketBtns(t) {
   return '<div class="tk-files">' + t.files.map(x => '<button type="button" class="btn ghost" data-tk="' + x.id + '">' + I.travel + '<span>' + (x.l ? esc(x.l) : t.city ? 'Бронь жилья' : x.who === 'both' ? 'Билет на обоих' : 'Билет ' + (x.who === 'T' ? 'мамы' : 'папы')) + '</span></button>').join('') + '</div>';
 }
 /* a file sheet opens for a ticket or for a stay booking (stays carry `city`) */
-const medFiles = () => state.docs.filter(d => d.med && d.blob).map(d => ({med: true, title: d.title, date: d.date, files: [{id: d.blob, who: d.who}]}));
+// med: a paper shown whole on screen, every page stacked (also the arrival card, with its own hint)
+const medFiles = () => state.docs.filter(d => d.med && d.blob).map(d => ({med: true, title: d.title, date: d.date, hint: d.hint, files: [{id: d.blob, who: d.who}]}));
 const tkOf = id => state.tickets.concat(state.stays, state.help.insurance.files ? [state.help.insurance] : [], medFiles()).find(t => (t.files || []).some(x => x.id === id));
 const canSave = () => !!downloadsNs || !hasViewer;
 function sheetView() {
@@ -1583,7 +1584,7 @@ function sheetView() {
        : '<p class="ts-none">В этой копии страницы файла нет. Он есть в опубликованной версии и в локальной копии на компьютере.</p>') +
     (acts.length ? '<div class="ts-acts">' + acts.join('') + '</div>' : '') +
     (f && hasViewer && !downloadsNs ? '<p class="ts-hint">Чтобы сохранить ' + what + ' на телефон, нажмите на картинку и подержите.</p>' : '') +
-    '<p class="ts-hint">' + (web ? 'Здесь первый лист. Всю сводку врачу удобнее показать кнопкой «Открыть сводку целиком».' : med ? 'Покажите врачу на экране: листайте вниз, здесь все листы.' : ins ? 'Сначала звонок в ассистанс: ' + t.show + '. В больнице покажите паспорт и этот полис.' : stay ? 'При заселении покажите паспорта и эту бронь.' : 'На посадке билет не спрашивают — достаточно паспорта. Файл — на случай вопросов проводника.') + '</p></div>';
+    '<p class="ts-hint">' + (web ? 'Здесь первый лист. Всю сводку врачу удобнее показать кнопкой «Открыть сводку целиком».' : med ? t.hint || 'Покажите врачу на экране: листайте вниз, здесь все листы.' : ins ? 'Сначала звонок в ассистанс: ' + t.show + '. В больнице покажите паспорт и этот полис.' : stay ? 'При заселении покажите паспорта и эту бронь.' : 'На посадке билет не спрашивают — достаточно паспорта. Файл — на случай вопросов проводника.') + '</p></div>';
 }
 function openSheet(id) {
   const y = window.scrollY; pushLayer(); ov = null; sheet = id; render(); window.scrollTo(0, y);
