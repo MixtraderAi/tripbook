@@ -1365,7 +1365,7 @@ const forksOf = z => state.forks.filter(f => f.zone === z);
 const sayLine = (t, hint) => t ? '<p class="say"><span class="lab">Прочитать вслух</span><b>' + esc(t) + '</b>' + (hint ? '<small>Ровно, по слогам. Если не поймут — покажите экран.</small>' : '') + '</p>' : '';
 const placeSay = x => x.say ? '<span class="say-s"><span class="cjk" lang="zh">' + esc(x.cn) + '</span> — «' + esc(x.say) + '»</span>' : '';
 function phraseCard(c) {
-  return '<div class="phrase"><h3>' + esc(c.title) + '</h3><p class="cn-text" lang="zh">' + esc(c.cn) + '</p>' + sayLine(c.say, true) + (c.en ? '<p class="ru-text" lang="en">' + esc(c.en) + '</p>' : '') + '<p class="ru-text">' + esc(c.ru) + '</p><div class="phr-acts"><button type="button" class="btn" data-copy="' + esc(c.cn) + '">' + I.copy + '<span>Скопировать по-китайски</span></button>' + (c.en ? '<button type="button" class="btn ghost" data-copy="' + esc(c.en) + '">' + I.copy + '<span>Скопировать по-английски</span></button>' : '') + '<button type="button" class="btn ghost" data-show="' + showKey({kind: 'phrase', title: c.title, cn: c.cn, say: c.say, ru: c.ru}) + '">Показать крупно</button></div></div>';
+  return '<div class="phrase"><h3>' + esc(c.title) + '</h3><p class="cn-text" lang="zh">' + esc(c.cn) + '</p>' + sayLine(c.say, true) + (c.en ? '<p class="ru-text" lang="en">' + esc(c.en) + '</p>' : '') + '<p class="ru-text">' + esc(c.ru) + '</p><div class="phr-acts"><button type="button" class="btn" data-copy="' + esc(c.cn) + '">' + I.copy + '<span>Скопировать по-китайски</span></button>' + (c.en ? '<button type="button" class="btn ghost" data-sel="[lang=en]" data-copy="' + esc(c.en) + '">' + I.copy + '<span>Скопировать по-английски</span></button>' : '') + '<button type="button" class="btn ghost" data-show="' + showKey({kind: 'phrase', title: c.title, cn: c.cn, say: c.say, ru: c.ru}) + '">Показать крупно</button></div></div>';
 }
 
 /* ---------- HOME ---------- */
@@ -3040,7 +3040,7 @@ function flash(btn, text) {
 }
 function copyText(text, btn) {
   const fallback = () => {
-    const target = btn.closest('.phrase, .dr') ? (btn.closest('.phrase') || btn.closest('.dr')).querySelector('.cn-text, .areas') : btn.querySelector('.mono, span');
+    const target = btn.closest('.phrase, .dr') ? (btn.closest('.phrase') || btn.closest('.dr')).querySelector(btn.dataset.sel || '.cn-text, .areas') : btn.querySelector('.mono, span');
     try { const r = document.createRange(); r.selectNodeContents(target || btn); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
     flash(btn, 'Выделено — нажмите Ctrl+C');
   };
